@@ -22,6 +22,8 @@ int delete_falling_word(falling_word *word_to_delete);
 int add_falling_word(falling_word *word_to_add);
 falling_word *create_falling_word(char word[], int x, int y);
 
+int main_loop_temp(void);
+
 static void test_create_word();
 static void test_add_word();
 static void test_delete_word();

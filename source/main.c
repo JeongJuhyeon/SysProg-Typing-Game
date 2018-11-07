@@ -5,6 +5,8 @@
 #include "minunit.h"                                 // for slightly more convenient unit testing
 #include "mainlib.h"                                 // function definitions, struct definition
 
+#define LIVES_AT_START	3
+
 falling_word *head = NULL;
 
 
@@ -18,11 +20,21 @@ MU_TEST_SUITE(linked_list_tests) {
 
 
 int main() {
-
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
+    
 
     return 0;
+}
+
+// Temporary version of the main loop
+int main_loop_temp() {
+    int remaining_lives = LIVES_AT_START;
+    int score = 0;
+
+    while(1) {
+	;
+    }
 }
 
 // Delete a node from the linked list
