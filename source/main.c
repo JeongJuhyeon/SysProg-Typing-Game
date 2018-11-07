@@ -1,13 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>				     // for alarms
+#include <sys/time.h>				     // for time structs
 // #include "minunit_3line.h"                        // for unit testing
 #include "minunit.h"                                 // for slightly more convenient unit testing
 #include "mainlib.h"                                 // function definitions, struct definition
 
 #define LIVES_AT_START	3
+#define DEBUG		1
 
-falling_word *head = NULL;
+// Global variables
+falling_word *head = NULL;			     // head of falling_word linked list
+/* used to communicate between function called by signal
+ * and the rest of the program. REASON: functions called
+ * by signals cant return values or take parameters.
+ * example: signal(SIGLARM, handle_signal_50ms) */
+int lives_lost = 0;						     
 
 
 // Tests the functions related to manipulating the linked list
@@ -22,7 +31,6 @@ MU_TEST_SUITE(linked_list_tests) {
 int main() {
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
-    
 
     return 0;
 }
@@ -31,11 +39,56 @@ int main() {
 int main_loop_temp() {
     int remaining_lives = LIVES_AT_START;
     int score = 0;
+	
+    set_50ms_timer(); // Every 50 ms, SIGALRM will be received
+    signal(SIGALRM, handle_signal_50ms);
 
     while(1) {
-	;
+	pause();      // wait for a signal (SIGALRM)
+	if (lives_lost > 0) {
+		remaining_lives -= lives_lost;
+		lives_lost = 0;
+		if (remaining_lives <= 0)
+			level_finished(0);	
+	}
     }
 }
+
+
+void handle_signal_50ms(int signum){
+    static int updates_done = 0;
+    // every 50 ms
+    printf("50ms\n");
+    updates_done++;
+    
+    // every 1 second
+    if (updates_done == 20) {
+	printf("\n1 second\n\n");
+	drop_words_position();
+	lives_lost = check_words_bottom();
+	updates_done = 0;
+    }
+
+    return;
+}
+
+void set_50ms_timer(){
+    struct itimerval itimer_50ms;
+    itimer_50ms.it_interval.tv_sec = 0; // 0 s
+    itimer_50ms.it_interval.tv_usec = 50000; // 50 ms
+    itimer_50ms.it_value.tv_sec = 2; // Start 2 secs after setting
+    itimer_50ms.it_value.tv_usec = 0;
+    
+    setitimer(ITIMER_REAL, &itimer_50ms, NULL);
+}
+
+// -------------TO-DO Functions---------------
+
+void drop_words_position(){;}
+int check_words_bottom(){;}
+void level_finished(int user_won){;}
+
+// -------------Linked List Functions-------------
 
 // Delete a node from the linked list
 int delete_falling_word(falling_word *word_to_delete) {
@@ -92,6 +145,8 @@ falling_word *create_falling_word(char word[], int x, int y) {
     new_falling_word->y = y;
     return new_falling_word;
 }
+
+//-------------------Test Functions----------------
 
 // Unit tests for delete_falling_word()
 MU_TEST(test_create_word) {
