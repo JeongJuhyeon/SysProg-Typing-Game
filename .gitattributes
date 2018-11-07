@@ -1,0 +1,4 @@
+# excludes irrelevant directories from GitHub statistics
+/saves/* linguist-vendored
+/words/* linguist-vendored
+/Documents/* linguist-vendored
