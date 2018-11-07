@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <signal.h>				     // for alarms
 #include <sys/time.h>				     // for time structs
 // #include "minunit_3line.h"                        // for unit testing
@@ -9,6 +10,8 @@
 
 #define LIVES_AT_START	3
 #define DEBUG		1
+#define WORD_LIST_SIZE 5000
+
 
 // Global variables
 falling_word *head = NULL;			     // head of falling_word linked list
@@ -29,6 +32,7 @@ MU_TEST_SUITE(linked_list_tests) {
 
 
 int main() {
+
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
 
@@ -223,3 +227,15 @@ MU_TEST(test_find_word) {
     delete_falling_word(new_word2);
     delete_falling_word(new_word3);
 }
+
+//open word list file and load to array
+int load_words(FILE * word_file_fd, char ** word_list)
+{
+	//memory allocating + load words to array
+	for(int i = 0;i<WORD_LIST_SIZE;i++)
+	{
+		word_list[i] = (char*)calloc(MAX_WORD_LENGTH,sizeof(char));
+		fscanf(word_file_fd, "%s", word_list[i]);
+	}
+}
+
