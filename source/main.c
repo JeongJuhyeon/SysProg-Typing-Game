@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 // #include "minunit_3line.h"                        // for unit testing
 #include "minunit.h"                                 // for slightly more convenient unit testing
 #include "mainlib.h"                                 // function definitions, struct definition
 
+#define WORD_LIST_SIZE 5000
+
 falling_word *head = NULL;
+
 
 
 // Tests the functions related to manipulating the linked list
@@ -18,6 +22,11 @@ MU_TEST_SUITE(linked_list_tests) {
 
 
 int main() {
+
+    FILE* word_file_fd = fopen("../words/words_5000", "r");
+    char * word_list[WORD_LIST_SIZE];
+
+    load_words(word_file_fd, word_list); //load word
 
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
@@ -155,4 +164,15 @@ MU_TEST(test_find_word) {
     delete_falling_word(new_word);
     delete_falling_word(new_word2);
     delete_falling_word(new_word3);
+}
+
+//open word list file and load to array
+int load_words(FILE * word_file_fd, char ** word_list)
+{
+	//memory allocating + load words to array
+	for(int i = 0;i<WORD_LIST_SIZE;i++)
+	{
+		word_list[i] = (char*)calloc(MAX_WORD_LENGTH,sizeof(char));
+		fscanf(word_file_fd, "%s", word_list[i]);
+	}
 }
