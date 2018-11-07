@@ -12,6 +12,7 @@
 #define DEBUG		1
 #define WORD_LIST_SIZE 5000
 
+// test commit
 
 // Global variables
 falling_word *head = NULL;			     // head of falling_word linked list
