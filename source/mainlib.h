@@ -47,4 +47,7 @@ static void test_add_word();
 static void test_delete_word();
 static void test_find_word();
 
+//load words function
+int load_words(char * file_name, char ** word_list, int list_size);
+
 
