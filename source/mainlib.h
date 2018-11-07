@@ -7,7 +7,12 @@
 
 #endif //SYSPROG_TYPING_GAME_MAINLIB_H
 
+//--------#define numbers/settings----------
+
 #define MAX_WORD_LENGTH 30
+#define LIVES_AT_START    3
+#define DEBUG            1
+#define WORD_LIST_SIZE 5000
 
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
@@ -17,6 +22,7 @@ typedef struct falling_word {
     int y;
 } falling_word;
 
+//---------function declarations------------
 
 // linked list functions
 falling_word *find_falling_word(char *word_to_search);
@@ -28,6 +34,7 @@ falling_word *create_falling_word(char word[], int x, int y);
 void drop_words_position(void);
 int check_words_bottom(void);
 void level_finished(int user_won);
+int main_loop_temp(void);
 
 // alarm, timer, update functions
 void set_50ms_timer(void);
@@ -40,4 +47,4 @@ static void test_add_word();
 static void test_delete_word();
 static void test_find_word();
 
-int main_loop_temp(void);
+
