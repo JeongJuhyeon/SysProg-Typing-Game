@@ -5,8 +5,16 @@
 
 #define WORD_LIST_SIZE 5000
 
-int load_words(FILE * word_file_fd, char ** word_list)
+int load_words(char ** word_list)
 {
+	FILE* word_file_fd = fopen("../words/words_5000", "r");
+
+	if(!word_file_fd)
+	{
+		perror("no word list");
+		exit(1);
+	}
+
 	//memory allocating + load words to array
 	for(int i = 0;i<WORD_LIST_SIZE;i++)
 	{
@@ -17,9 +25,8 @@ int load_words(FILE * word_file_fd, char ** word_list)
 
 void main()
 {
-	FILE* word_file_fd = fopen("../words/words_5000", "r");
 	char * word_list[WORD_LIST_SIZE];
-	load_words(word_file_fd, word_list);
+	load_words(word_list);
 
 	for(int i;i<WORD_LIST_SIZE;i++)//for test
 	{

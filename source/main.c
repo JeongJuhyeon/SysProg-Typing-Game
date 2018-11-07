@@ -30,6 +30,7 @@ MU_TEST_SUITE(linked_list_tests)
 
 int main()
 {
+    char * word_list[WORD_LIST_SIZE];
 
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
@@ -93,15 +94,24 @@ void set_50ms_timer()
 }
 
 //open word list file and load to array
-int load_words(FILE *word_file_fd, char **word_list)
+int load_words(char ** word_list)
 {
-    //memory allocating + load words to array
-    for (int i = 0; i < WORD_LIST_SIZE; i++)
+    FILE* word_file_fd = fopen("../words/words_5000", "r");
+
+    if(!word_file_fd)
     {
-        word_list[i] = (char *) calloc(MAX_WORD_LENGTH, sizeof(char));
+        perror("no word list");
+        exit(1);
+    }
+
+    //memory allocating + load words to array
+    for(int i = 0;i<WORD_LIST_SIZE;i++)
+    {
+        word_list[i] = (char*)calloc(MAX_WORD_LENGTH,sizeof(char));
         fscanf(word_file_fd, "%s", word_list[i]);
     }
 }
+
 
 
 // -------------TO-DO Functions---------------
