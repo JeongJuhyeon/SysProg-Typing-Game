@@ -94,9 +94,9 @@ void set_50ms_timer()
 }
 
 //open word list file and load to array
-int load_words(char ** word_list)
+int load_words(char * file_name, char ** word_list, int list_size)
 {
-    FILE* word_file_fd = fopen("../words/words_5000", "r");
+    FILE* word_file_fd = fopen(file_name, "r");
 
     if(!word_file_fd)
     {
@@ -105,7 +105,7 @@ int load_words(char ** word_list)
     }
 
     //memory allocating + load words to array
-    for(int i = 0;i<WORD_LIST_SIZE;i++)
+    for(int i = 0;i<list_size;i++)
     {
         word_list[i] = (char*)calloc(MAX_WORD_LENGTH,sizeof(char));
         fscanf(word_file_fd, "%s", word_list[i]);
