@@ -15,7 +15,7 @@
 #define WORD_LIST_SIZE 5000
 
 // for user input letter check
-typedef enum { DEFAULT = -1, ENTER = 13, ESC = 27 } USR_INPUT_ASCII;
+typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
 
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
@@ -37,21 +37,22 @@ falling_word *create_falling_word(char word[], int x, int y);
 void drop_words_position(void);
 int check_words_bottom(void);
 void level_finished(int user_won);
-int main_loop_temp(void);
+int gameplay_loop_temp(void);
+void setup_gameplay_stage(void);
 
 // alarm, timer, update functions
 void set_50ms_timer(void);
 void handle_signal_50ms(int);
 
 // User input functions
-void user_word_input(char[], int*,char);
-int check_input_word(char[]);
+void handle_input_letter(char *, char);
+int handle_input_word(char *);
 void handle_esc();
 
 // TTY mode settings
-set_cr_noecho_mode();
-set_nodelay_mode();
-tty_mode(int how);
+void set_cr_noecho_mode();
+void set_nodelay_mode();
+void tty_mode(int how);
 
 
 // test functions
@@ -68,4 +69,3 @@ void drop_words_position();
 
 int check_words_bottom();
 
-void level_finished(falling_word* head, int user_won);
