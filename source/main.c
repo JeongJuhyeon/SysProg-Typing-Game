@@ -32,7 +32,6 @@ MU_TEST_SUITE(linked_list_tests) {
 
 
 int main() {
-    char *word_list[WORD_LIST_SIZE];
 
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
@@ -45,12 +44,12 @@ int main() {
 
 // Temporary version of the main loop
 int gameplay_loop_temp() {
+    char *word_list[WORD_LIST_SIZE];
     int remaining_lives = LIVES_AT_START;
     int score = 0;
 
     char input_word[MAX_WORD_LENGTH];
     char input_letter;
-    int index = 0;
 
     while (1) {
         pause();      // wait for a signal (SIGALRM)
@@ -62,9 +61,10 @@ int gameplay_loop_temp() {
                strchr("\n\033abcdefghijklmnopqrstuvwxyz", input_letter) == NULL);
 
         // handle input letter
-        handle_input_letter(input_word, input_letter);
+        if (input_letter != EOF)
+            handle_input_letter(input_word, input_letter);
         // if the user pressed enter, process the word
-        if ((int) input_letter == ENTER)
+        if (input_letter == ENTER)
             score += handle_input_word(input_word);
 
         // TODO -> Print window refresh
@@ -188,13 +188,10 @@ int check_words_bottom() {
 // -------------User Input Functions ------------
 void handle_input_letter(char *input_word, char input_letter) {
     static int index = 0;
-	
-	if (input_letter == EOF) 
-		return;					//TODO
 
-	if (DEBUG && input_letter != EOF) printf("Char entered: %c, (int) input_letter: %d\n", input_letter, (int) input_letter);
+	if (DEBUG && input_letter != EOF) printf("Char entered: %c, input_letter: %d\n", input_letter, input_letter);
 
-    switch ((int) input_letter) {
+    switch (input_letter) {
         case ESC:
             // EXIT ( TO - DO -> 'pause' )
             handle_esc();
@@ -297,8 +294,6 @@ int delete_falling_word(falling_word *word_to_delete) {
 
 // If the word is found, returns the node. If not, returns NULL.
 falling_word *find_falling_word(char *word_to_search) {
-    falling_word *iter_node = head;
-
     // iter_node = current node, iterates over linked list
     for (falling_word *iter_node = head; iter_node != NULL; iter_node = iter_node->next) {
         if (!strcmp(word_to_search, iter_node->word)) {
