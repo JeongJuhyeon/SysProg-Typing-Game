@@ -63,4 +63,9 @@ static void test_find_word();
 //load words function
 int load_words(char * file_name, char ** word_list, int list_size);
 
+// -------------TO-DO Functions---------------
+void drop_words_position();
 
+int check_words_bottom();
+
+void level_finished(falling_word* head, int user_won);

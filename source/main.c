@@ -10,6 +10,8 @@
 #include <termios.h>								// for TTY mode settings
 
 
+#define ROWS 30
+
 
 //---------Global Variables--------
 falling_word *head = NULL;                 // head of falling_word linked list
@@ -81,7 +83,8 @@ int main_loop_temp()
             lives_lost = 0;
             if (remaining_lives <= 0)
             {
-                level_finished(0);
+                level_finished(head, 0);
+				break;
             }
         }
     }
@@ -145,13 +148,51 @@ int load_words(char * file_name, char ** word_list, int list_size)
 // -------------TO-DO Functions---------------
 
 void drop_words_position()
-{ ; }
+{ 
+	falling_word* temp = head;
+
+	while (temp)
+	{
+		temp->y += 1;
+		temp = temp->next;
+	}
+}
 
 int check_words_bottom()
-{ ; }
+{ 
+	falling_word* word = head;
+	int player_life = 0;
 
-void level_finished(int user_won)
-{ ; }
+	while (word)
+	{
+		if (word->y == ROWS)
+		{
+			player_life++;
+		}
+		word = word->next; //go to the next word
+	}
+
+	return player_life;
+}
+
+void level_finished(falling_word* head, int user_won)
+{ 
+	struct itimerval itimer_stop;
+	falling_word* temp, *current;
+
+	for (temp = head; temp != NULL; temp = current)
+	{
+		current = temp->next;
+		free(temp);
+	}
+
+	itimer_stop.it_interval.tv_sec = 0; // 0 s
+	itimer_stop.it_interval.tv_usec = 0; // 0 ms
+	itimer_stop.it_value.tv_sec = 0; // Start 0 secs after setting
+	itimer_stop.it_value.tv_usec = 0;
+
+	setitimer(ITIMER_REAL, &itimer_stop, NULL);
+}
 
 // -------------User Input Functions ------------
 void user_word_input(char input_word[], int* index, char input_letter)
