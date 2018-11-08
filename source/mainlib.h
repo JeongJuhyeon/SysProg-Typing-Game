@@ -14,6 +14,9 @@
 #define DEBUG            1
 #define WORD_LIST_SIZE 5000
 
+// for user input letter check
+typedef enum { DEFAULT = -1, ENTER = 13, ESC = 27 } USR_INPUT_ASCII;
+
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
     struct falling_word *next;
@@ -39,6 +42,16 @@ int main_loop_temp(void);
 // alarm, timer, update functions
 void set_50ms_timer(void);
 void handle_signal_50ms(int);
+
+// User input functions
+void user_word_input(char[], int*,char);
+int check_input_word(char[]);
+void handle_esc();
+
+// TTY mode settings
+set_cr_noecho_mode();
+set_nodelay_mode();
+tty_mode(int how);
 
 
 // test functions

@@ -7,6 +7,8 @@
 // #include "minunit_3line.h"                        // for unit testing
 #include "minunit.h"                                 // for slightly more convenient unit testing
 #include "mainlib.h"                                 // function definitions, struct definition
+#include <termios.h>								// for TTY mode settings
+
 
 
 //---------Global Variables--------
@@ -44,12 +46,35 @@ int main_loop_temp()
     int remaining_lives = LIVES_AT_START;
     int score = 0;
 
+	char input_word[MAX_WORD_LENGTH];
+	char letter; int index = 0;
+
+	tty_mode(0);
+	set_cr_noecho_mode();
+	set_nodelay_mode();
+
     set_50ms_timer(); // Every 50 ms, SIGALRM will be received
     signal(SIGALRM, handle_signal_50ms);
 
     while (1)
     {
         pause();      // wait for a signal (SIGALRM)
+
+
+		//fscanf(stdin," %c", &input_letter); 
+		fflush(stdin);
+		while ((input_letter = getchar()) != EOF && strchr("\n\033abcdefghijklmnopqrstuvwxyz", input_letter) == NULL);
+						  // every 50 ms, check the BUFFER whether there is inputted letter
+
+		user_word_input(input_word, &index, letter);	// act with one letter
+
+		if ((int)letter == ENTER)		score += check_input_word(input_word); // act with one completed word
+												// FIND_FALLING_WORD
+												// DELETE_FALLING_WORD
+												// modify  'score'
+				
+		// TO DO -> Print window refresh
+
         if (lives_lost > 0)
         {
             remaining_lives -= lives_lost;
@@ -60,6 +85,8 @@ int main_loop_temp()
             }
         }
     }
+
+	tty_mode(1);
 }
 
 
@@ -81,6 +108,7 @@ void handle_signal_50ms(int signum)
 
     return;
 }
+
 
 void set_50ms_timer()
 {
@@ -124,6 +152,95 @@ int check_words_bottom()
 
 void level_finished(int user_won)
 { ; }
+
+// -------------User Input Functions ------------
+void user_word_input(char input_word[], int* index, char input_letter)
+{
+	// void user_word_input
+	switch ((int)input_letter)
+	{
+	case		ESC:
+		// EXIT ( TO - DO -> 'pause' )
+		handle_esc();
+		break;
+
+	case ENTER:
+		// complete input_word by adding 'NULL' to array   +   index reset
+		input_word[*index++] = '\0';
+		*index = 0;
+
+		// finding and deleting word -> in main_loop_temp
+		break;
+
+	default:
+		//	with each one letter, add to 'input_word'
+		if (*index >= MAX_WORD_LENGTH - 2)
+			; // IF comes to MAX LENGTH, no more input letter will be added
+		else if (*index < MAX_WORD_LENGTH - 1) // '\0' can be in the last address 
+			input_word[*index++] = input_letter;
+		break;
+	}
+}
+
+void handle_esc()
+{
+	// just EXIT ( To do : 'pause' )
+	exit(0);
+}
+
+int check_input_word(char input_word[])
+{
+	int returnScore = 1; // score of a word -> ? just 1 ?
+	falling_word* searched_pointer = NULL;
+	searched_pointer = find_falling_word(input_word);	// search
+
+	if (searched_pointer)												// act
+	{
+		delete_falling_word(searched_pointer);
+		return returnScore;
+	}
+	else if (searched_pointer == NULL) 
+		return 0;		
+}
+
+
+//---------- Setting TTY mode Functions ---------
+set_cr_noecho_mode()
+{
+	struct termios ttystate;
+
+	tcgetattr(0, &ttystate);
+	ttystate.c_lflag &= ~ICANON;
+	ttystate.c_lflag &= ~ECHO;
+	ttystate.c_cc[VMIN] = 1;
+	tcsetattr(0, TCSANOW, &ttystate);
+}
+
+set_nodelay_mode()
+{
+	int termflags;
+	termflags = fcntl(0, F_GETFL);
+	termflags |= O_NDELAY;
+	fcntl(0, F_SETFL, termflags);
+}
+
+tty_mode(int how)
+{
+	static struct termios original_mode;
+	static int original_flags;
+	static int stored = 0;
+	if (how == 0) {
+		tcgetattr(0, &original_mode);
+		original_flags = fcntl(0, F_GETFL);
+		stored = 1;
+	}
+	else if (stored)
+	{
+		tcsetattr(0, TCSANOW, &original_mode);
+		fcntl(0, F_SETFL, original_flags);
+	}
+}
+
 
 // -------------Linked List Functions-------------
 
