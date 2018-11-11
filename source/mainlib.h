@@ -13,6 +13,12 @@
 #define LIVES_AT_START    3
 #define DEBUG            1
 #define WORD_LIST_SIZE 5000
+#define ROWS 40
+#define FIELD_BOTTOM (ROWS - 6)
+#define COLUMNS 50
+#define UPDATES_PER_SECOND 20
+#define SPAWN_TIME 1.5
+#define DROP_TIME 1
 
 // for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
@@ -32,6 +38,7 @@ falling_word *find_falling_word(char *word_to_search);
 int delete_falling_word(falling_word *word_to_delete);
 int add_falling_word(falling_word *word_to_add);
 falling_word *create_falling_word(char word[], int x, int y);
+void empty_linked_list();
 
 // gameplay internal functions
 void drop_words_position(void);
@@ -39,6 +46,7 @@ int check_words_bottom(void);
 void level_finished(int user_won);
 int gameplay_loop_temp(void);
 void setup_gameplay_stage(void);
+void spawn_word(char *word_list[]);
 
 // alarm, timer, update functions
 void set_50ms_timer(void);
@@ -60,6 +68,7 @@ static void test_create_word();
 static void test_add_word();
 static void test_delete_word();
 static void test_find_word();
+static void test_empty_list();
 
 //load words function
 int load_words(char * file_name, char ** word_list, int list_size);

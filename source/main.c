@@ -10,48 +10,52 @@
 #include <termios.h>                                // for TTY mode settings
 
 
-#define ROWS 30
-
-
 //---------Global Variables--------
 falling_word *head = NULL;                 // head of falling_word linked list
 /* used to communicate between function called by signal
  * and the rest of the program. REASON: functions called
  * by signals cant return values or take parameters.
  * example: signal(SIGLARM, handle_signal_50ms) */
-int lives_lost = 0;
+int lives_lost = 0;                                     // can't update this when called by signal handler
+char **word_list_global_ptr = NULL;                      // can't send this as parameter to signal handler
 
 
 // Tests the functions related to manipulating the linked list
-MU_TEST_SUITE(linked_list_tests) {
+MU_TEST_SUITE(linked_list_tests)
+{
     MU_RUN_TEST(test_create_word);
     MU_RUN_TEST(test_add_word);
     MU_RUN_TEST(test_delete_word);
     MU_RUN_TEST(test_find_word);
+    MU_RUN_TEST(test_empty_list);
 }
 
 
-int main() {
-
+int main()
+{
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
+    if (DEBUG) printf("Head: %p\n", head);
     MU_REPORT(); // Report the results
+    if (DEBUG) printf("Head: %p\n", head);
     setup_gameplay_stage();
+    if (DEBUG) printf("Gameplay stage setup complete. Head: %p\n", head);
     gameplay_loop_temp();
-
-
     return 0;
 }
 
 // Temporary version of the main loop
-int gameplay_loop_temp() {
+int gameplay_loop_temp()
+{
     char *word_list[WORD_LIST_SIZE];
+    load_words("../words/words_5000", word_list, WORD_LIST_SIZE);
     int remaining_lives = LIVES_AT_START;
     int score = 0;
 
     char input_word[MAX_WORD_LENGTH];
     char input_letter;
 
-    while (1) {
+    while (1)
+    {
         pause();      // wait for a signal (SIGALRM)
 
         fflush(stdin);
@@ -62,17 +66,24 @@ int gameplay_loop_temp() {
 
         // handle input letter
         if (input_letter != EOF)
+        {
             handle_input_letter(input_word, input_letter);
+        }
         // if the user pressed enter, process the word
         if (input_letter == ENTER)
+        {
             score += handle_input_word(input_word);
+        }
 
         // TODO -> Print window refresh
 
-        if (lives_lost > 0) {
+        if (lives_lost > 0)
+        {
             remaining_lives -= lives_lost;
             lives_lost = 0;
-            if (remaining_lives <= 0) {
+            printf("\n---------\nLives left: %d, Score: %d\n------", remaining_lives, score);
+            if (remaining_lives <= 0)
+            {
                 level_finished(0);
                 break;
             }
@@ -83,14 +94,12 @@ int gameplay_loop_temp() {
 }
 
 //-------------Stage setup/cleanup functions-----------
-void level_finished(int user_won) {
+void level_finished(int user_won)
+{
     struct itimerval itimer_stop;
     falling_word *temp, *current;
 
-    for (temp = head; temp != NULL; temp = current) {
-        current = temp->next;
-        free(temp);
-    }
+    empty_linked_list();
 
     itimer_stop.it_interval.tv_sec = 0; // 0 s
     itimer_stop.it_interval.tv_usec = 0; // 0 ms
@@ -101,28 +110,42 @@ void level_finished(int user_won) {
     tty_mode(1);
 }
 
-void setup_gameplay_stage() {
+void setup_gameplay_stage()
+{
     tty_mode(0);
     set_cr_noecho_mode();
     set_nodelay_mode();
 
     set_50ms_timer(); // Every 50 ms, SIGALRM will be received
     signal(SIGALRM, handle_signal_50ms);
+
+    srand(time(NULL));
 }
 
 //-------------Alarm functions--------------
 
 // handle the signal that comes every 50ms
-void handle_signal_50ms(int signum) {
+void handle_signal_50ms(int signum)
+{
     static int updates_done = 0;
     // every 50 ms
     updates_done++;
 
     // every 1 second
-    if (updates_done == 20) {
-        if (DEBUG) printf("\n1 second\n\n");
+    if (updates_done % (int) UPDATES_PER_SECOND * DROP_TIME == 0)
+    {
         drop_words_position();
         lives_lost = check_words_bottom();
+    }
+
+    // every x seconds
+    if (updates_done % (int) UPDATES_PER_SECOND * SPAWN_TIME == 0)
+    {
+        spawn_word(word_list_global_ptr);
+    }
+
+    if (updates_done >= 100000)
+    {
         updates_done = 0;
     }
 
@@ -130,51 +153,77 @@ void handle_signal_50ms(int signum) {
 }
 
 // set a timer that goes off every 50 ms
-void set_50ms_timer() {
+void set_50ms_timer()
+{
     struct itimerval itimer_50ms;
     itimer_50ms.it_interval.tv_sec = 0; // 0 s
     itimer_50ms.it_interval.tv_usec = 50000; // 50 ms
-    itimer_50ms.it_value.tv_sec = 2; // Start 2 secs after setting
+    itimer_50ms.it_value.tv_sec = 1; // Start 2 secs after setting
     itimer_50ms.it_value.tv_usec = 0;
 
     setitimer(ITIMER_REAL, &itimer_50ms, NULL);
 }
 
 //open word list file and load to array
-int load_words(char *file_name, char **word_list, int list_size) {
+int load_words(char *file_name, char **word_list, int list_size)
+{
     FILE *word_file_fd = fopen(file_name, "r");
 
-    if (!word_file_fd) {
+    if (!word_file_fd)
+    {
         perror("no word list");
         exit(1);
     }
 
     //memory allocating + load words to array
-    for (int i = 0; i < list_size; i++) {
+    for (int i = 0; i < list_size; i++)
+    {
         word_list[i] = (char *) calloc(MAX_WORD_LENGTH, sizeof(char));
         fscanf(word_file_fd, "%s", word_list[i]);
     }
+
+    word_list_global_ptr = word_list;
 }
 
 
 
 // -------------Word handling functions--------
 
-void drop_words_position() {
+// Spawns a new word
+void spawn_word(char *word_list[])
+{
+
+    char new_word[MAX_WORD_LENGTH];
+    // Pick a random word from the list and copy it into new_word
+    strncpy(new_word, word_list[rand() % WORD_LIST_SIZE], MAX_WORD_LENGTH);
+    // Pick a random x coordinate
+    int x = rand() % (COLUMNS - strlen(new_word) - 1);
+    // Create and add the word
+    add_falling_word(create_falling_word(new_word, x, 0));
+    if (DEBUG) printf("New word: %s\n", new_word);
+}
+
+void drop_words_position()
+{
     falling_word *temp = head;
 
-    while (temp) {
+    while (temp)
+    {
+        //if (DEBUG) printf("Temp: %p, Word: %s, Y: %d, Next: %p\n",temp, temp->word, temp->y, temp->next);
         temp->y += 1;
         temp = temp->next;
     }
 }
 
-int check_words_bottom() {
+int check_words_bottom()
+{
     falling_word *word = head;
     int player_life = 0;
 
-    while (word) {
-        if (word->y == ROWS) {
+    while (word)
+    {
+        if (word->y == FIELD_BOTTOM)
+        {
             player_life++;
         }
         word = word->next; //go to the next word
@@ -184,14 +233,15 @@ int check_words_bottom() {
 }
 
 
-
 // -------------User Input Functions ------------
-void handle_input_letter(char *input_word, char input_letter) {
+void handle_input_letter(char *input_word, char input_letter)
+{
     static int index = 0;
 
-	if (DEBUG && input_letter != EOF) printf("Char entered: %c, input_letter: %d\n", input_letter, input_letter);
+    //if (DEBUG && input_letter != EOF) printf("Char entered: %c, input_letter: %d\n", input_letter, input_letter);
 
-    switch (input_letter) {
+    switch (input_letter)
+    {
         case ESC:
             // EXIT ( TO - DO -> 'pause' )
             handle_esc();
@@ -206,31 +256,41 @@ void handle_input_letter(char *input_word, char input_letter) {
 
         default:
             //	with each one letter, add to 'input_word'
-            if (index >= MAX_WORD_LENGTH - 2); // IF comes to MAX LENGTH, no more input letter will be added
-            else if (index < MAX_WORD_LENGTH - 1) // '\0' can be in the last address
+            if (index >= MAX_WORD_LENGTH - 2)
+            { // IF comes to MAX LENGTH, no more input letter will be added
+            } else if (index < MAX_WORD_LENGTH - 1)
+            { // '\0' can be in the last address
                 input_word[index++] = input_letter;
+            }
             break;
     }
 }
 
-int handle_input_word(char *input_word) {
+int handle_input_word(char *input_word)
+{
     if (DEBUG) printf("Input word: %s\n", input_word);
 
     int returnScore = 1; // score of a word -> ? just 1 ?
     falling_word *searched_pointer = NULL;
     searched_pointer = find_falling_word(input_word);    // search the word
 
+    if (DEBUG) printf("Word %sfound\n", searched_pointer == NULL ? "not" : " ");
+
     // if the word is found, delete it and return points
-    if (searched_pointer) {
+    if (searched_pointer)
+    {
         delete_falling_word(searched_pointer);
         return returnScore;
     }
         // if the word is not found, return 0
     else if (searched_pointer == NULL)
+    {
         return 0;
+    }
 }
 
-void handle_esc() {
+void handle_esc()
+{
     // just EXIT ( To do : 'pause' )
     tty_mode(1);
     exit(0);
@@ -238,7 +298,8 @@ void handle_esc() {
 
 
 //---------- Setting TTY mode Functions ---------
-void set_cr_noecho_mode() {
+void set_cr_noecho_mode()
+{
     struct termios ttystate;
 
     tcgetattr(0, &ttystate);
@@ -248,22 +309,26 @@ void set_cr_noecho_mode() {
     tcsetattr(0, TCSANOW, &ttystate);
 }
 
-void set_nodelay_mode() {
+void set_nodelay_mode()
+{
     int termflags;
     termflags = fcntl(0, F_GETFL);
     termflags |= O_NDELAY;
     fcntl(0, F_SETFL, termflags);
 }
 
-void tty_mode(int how) {
+void tty_mode(int how)
+{
     static struct termios original_mode;
     static int original_flags;
     static int stored = 0;
-    if (how == 0) {
+    if (how == 0)
+    {
         tcgetattr(0, &original_mode);
         original_flags = fcntl(0, F_GETFL);
         stored = 1;
-    } else if (stored) {
+    } else if (stored)
+    {
         tcsetattr(0, TCSANOW, &original_mode);
         fcntl(0, F_SETFL, original_flags);
     }
@@ -273,30 +338,41 @@ void tty_mode(int how) {
 // -------------Linked List Functions-------------
 
 // Delete a node from the linked list
-int delete_falling_word(falling_word *word_to_delete) {
-    if (word_to_delete->prev != NULL) {
+int delete_falling_word(falling_word *word_to_delete)
+{
+
+    //if (DEBUG) printf("Deleting %s.\nPrev: %p.\nNext: %p.\n Head is %p.\n", word_to_delete->word, word_to_delete->prev, word_to_delete->next, head);
+
+    // If a previous node exist, we need to tie that one to the next
+    if (word_to_delete->prev != NULL)
+    {
         word_to_delete->prev->next = word_to_delete->next;
-    } else {          // deleting the head
+    }
+        // If not, that means it's the head, so the new head becomes the next
+    else
+    {
         head = word_to_delete->next;
+        //if (DEBUG) printf("New head is at %p.\n", head);
     }
 
-    if (word_to_delete->next != NULL) {
+    // If a next node exists, we need to tie that one to the prev
+    if (word_to_delete->next != NULL)
+    {
         word_to_delete->next->prev = word_to_delete->prev;
     }
-    if (word_to_delete->next != NULL) {
-        word_to_delete->next->prev = word_to_delete->prev;
-    }
-    // nothing special has to be done if it's the tail
 
     free(word_to_delete);
     return 0;
 }
 
 // If the word is found, returns the node. If not, returns NULL.
-falling_word *find_falling_word(char *word_to_search) {
+falling_word *find_falling_word(char *word_to_search)
+{
     // iter_node = current node, iterates over linked list
-    for (falling_word *iter_node = head; iter_node != NULL; iter_node = iter_node->next) {
-        if (!strcmp(word_to_search, iter_node->word)) {
+    for (falling_word *iter_node = head; iter_node != NULL; iter_node = iter_node->next)
+    {
+        if (!strcmp(word_to_search, iter_node->word))
+        {
             return iter_node;
         }
     }
@@ -307,8 +383,10 @@ falling_word *find_falling_word(char *word_to_search) {
 
 // Add a node to the linked list. It puts the new node at the front of the list,
 // so it becomes the new head.
-int add_falling_word(falling_word *word_to_add) {
-    if (head == NULL) {
+int add_falling_word(falling_word *word_to_add)
+{
+    if (head == NULL)
+    {
         head = word_to_add;
         return 0;
     }
@@ -320,7 +398,8 @@ int add_falling_word(falling_word *word_to_add) {
 }
 
 // Create (allocate and initialize) a falling word node
-falling_word *create_falling_word(char word[], int x, int y) {
+falling_word *create_falling_word(char word[], int x, int y)
+{
     falling_word *new_falling_word = malloc(sizeof(struct falling_word));
     new_falling_word->next = new_falling_word->prev = NULL;
     strncpy(new_falling_word->word, word, MAX_WORD_LENGTH);
@@ -329,10 +408,22 @@ falling_word *create_falling_word(char word[], int x, int y) {
     return new_falling_word;
 }
 
+void empty_linked_list()
+{
+    falling_word *current;
+    for (falling_word *temp = head; temp != NULL; temp = current)
+    {
+        current = temp->next;
+        free(temp);
+    }
+    head = NULL;
+}
+
 //-------------------Test Functions----------------
 
 // Unit tests for delete_falling_word()
-MU_TEST(test_create_word) {
+MU_TEST(test_create_word)
+{
     falling_word *new_word = create_falling_word("stock", 2, 5);
     mu_check(strcmp("stock", new_word->word) == 0);
     mu_check(new_word->x == 2);
@@ -340,7 +431,8 @@ MU_TEST(test_create_word) {
 }
 
 // Unit tests for add_falling_word()
-MU_TEST(test_add_word) {
+MU_TEST(test_add_word)
+{
     mu_check(head == NULL);
     falling_word *new_word = create_falling_word("stock", 2, 5);
     add_falling_word(new_word);
@@ -355,7 +447,8 @@ MU_TEST(test_add_word) {
 }
 
 // Unit tests for test_delete_word()
-MU_TEST(test_delete_word) {
+MU_TEST(test_delete_word)
+{
     // Empty the LL
     while (head != NULL)
         delete_falling_word(head);
@@ -385,7 +478,8 @@ MU_TEST(test_delete_word) {
 }
 
 // Unit tests for test_delete_word()
-MU_TEST(test_find_word) {
+MU_TEST(test_find_word)
+{
     falling_word *new_word = create_falling_word("stock", 2, 5);
     add_falling_word(new_word);
     mu_check(head == new_word);
@@ -402,6 +496,10 @@ MU_TEST(test_find_word) {
     mu_check(find_falling_word("ab") == head->next);
     mu_check(find_falling_word("cc") == head);
     mu_check(find_falling_word("abc") == NULL);
-    delete_falling_word(new_word);
-    delete_falling_word(new_word2);
+}
+
+MU_TEST(test_empty_list)
+{
+    empty_linked_list();
+    mu_check(head == NULL);
 }
