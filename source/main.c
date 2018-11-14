@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <signal.h>                     // for alarms
-#include <sys/time.h>                     // for time structs
-// #include "minunit_3line.h"                        // for unit testing
-#include "minunit.h"                                 // for slightly more convenient unit testing
-#include "mainlib.h"                                 // function definitions, struct definition
-#include <termios.h>                                // for TTY mode settings
+#include <signal.h>                         // for alarms
+#include <sys/time.h>                       // for time structs
+#include <termios.h>                        // for TTY mode settings
+#include <curses.h>                         // Curses
+
+// #include "minunit_3line.h"               // for unit testing
+#include "minunit.h"                        // for slightly more convenient unit testing
+#include "mainlib.h"                        // function definitions, struct definition
 
 
 //---------Global Variables--------
@@ -30,13 +32,21 @@ MU_TEST_SUITE(linked_list_tests)
     MU_RUN_TEST(test_empty_list);
 }
 
+MU_TEST_SUITE(graphics_tests)
+{
+    MU_RUN_TEST(test_draw_falling_words);
+}
+
 
 int main()
 {
+    //MU_RUN_SUITE(graphics_tests);
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     if (DEBUG) printf("Head: %p\n", head);
     MU_REPORT(); // Report the results
     if (DEBUG) printf("Head: %p\n", head);
+
+    initscr();
     setup_gameplay_stage();
     if (DEBUG) printf("Gameplay stage setup complete. Head: %p\n", head);
     gameplay_loop_temp();
@@ -72,10 +82,12 @@ int gameplay_loop_temp()
         // if the user pressed enter, process the word
         if (input_letter == ENTER)
         {
+            if (DEBUG) printf("Detected ENTER\n");
             score += handle_input_word(input_word);
+            if (DEBUG) printf("Score: %d\n", score);
         }
 
-        // TODO -> Print window refresh
+        // TODO ->
 
         if (lives_lost > 0)
         {
@@ -112,9 +124,12 @@ void level_finished(int user_won)
 
 void setup_gameplay_stage()
 {
+    // clear virtual screen
+    clear();
+
     tty_mode(0);
-    set_cr_noecho_mode();
-    set_nodelay_mode();
+    // set_cr_noecho_mode();
+    // set_nodelay_mode();
 
     set_50ms_timer(); // Every 50 ms, SIGALRM will be received
     signal(SIGALRM, handle_signal_50ms);
@@ -128,26 +143,26 @@ void setup_gameplay_stage()
 void handle_signal_50ms(int signum)
 {
     static int updates_done = 0;
-    // every 50 ms
     updates_done++;
 
-    // every 1 second
+    // drop the words
     if (updates_done % (int) UPDATES_PER_SECOND * DROP_TIME == 0)
     {
+        erase_falling_words();
         drop_words_position();
+        draw_all_falling_words();
         lives_lost = check_words_bottom();
     }
 
-    // every x seconds
+    // spawn a new word
     if (updates_done % (int) UPDATES_PER_SECOND * SPAWN_TIME == 0)
     {
         spawn_word(word_list_global_ptr);
+        draw_new_falling_word(head);
     }
 
     if (updates_done >= 100000)
-    {
         updates_done = 0;
-    }
 
     return;
 }
@@ -192,7 +207,6 @@ int load_words(char *file_name, char **word_list, int list_size)
 // Spawns a new word
 void spawn_word(char *word_list[])
 {
-
     char new_word[MAX_WORD_LENGTH];
     // Pick a random word from the list and copy it into new_word
     strncpy(new_word, word_list[rand() % WORD_LIST_SIZE], MAX_WORD_LENGTH);
@@ -200,7 +214,7 @@ void spawn_word(char *word_list[])
     int x = rand() % (COLUMNS - strlen(new_word) - 1);
     // Create and add the word
     add_falling_word(create_falling_word(new_word, x, 0));
-    if (DEBUG) printf("New word: %s\n", new_word);
+    // if (DEBUG) printf("New word: %s\n", new_word);
 }
 
 void drop_words_position()
@@ -419,6 +433,38 @@ void empty_linked_list()
     head = NULL;
 }
 
+//-----------------Graphics functions------------
+
+void erase_falling_words()
+{
+    char resized_eraser[MAX_WORD_LENGTH];
+    for (falling_word *cur = head; cur != NULL; cur = cur->next) {
+        move(cur->y, cur->x);
+        strncpy(resized_eraser, ERASER, strlen(cur->word));
+        addstr(resized_eraser);
+    }
+
+    refresh();
+}
+
+void draw_all_falling_words()
+{
+    for (falling_word *cur = head; cur != NULL; cur = cur->next) {
+        move(cur->y, cur->x);
+        addstr(cur->word);
+    }
+
+    refresh();
+}
+
+void draw_new_falling_word(falling_word *new_word){
+    move(new_word->y, new_word->x);
+    addstr(new_word->word);
+
+    refresh();
+}
+
+
 //-------------------Test Functions----------------
 
 // Unit tests for delete_falling_word()
@@ -502,4 +548,40 @@ MU_TEST(test_empty_list)
 {
     empty_linked_list();
     mu_check(head == NULL);
+}
+
+MU_TEST(test_draw_falling_words)
+{
+    // to spawn words
+    char *word_list[WORD_LIST_SIZE];
+    load_words("../words/words_5000", word_list, WORD_LIST_SIZE);
+
+    // add some words
+    spawn_word(word_list_global_ptr);
+    falling_word *new_word = create_falling_word("stock", 2, 2);
+    add_falling_word(new_word);
+    falling_word *new_word3 = create_falling_word("cc", 4, 1);
+    add_falling_word(new_word3);
+
+    // setup stage
+    initscr();
+    clear();
+
+    printf("After initscr()");
+
+    draw_all_falling_words();
+    sleep(2);
+    erase_falling_words();
+    drop_words_position();
+    draw_all_falling_words();
+
+    sleep(2);
+
+    // clear the LL
+    while (head != NULL)
+        delete_falling_word(head);
+
+    // exit curses screen
+    clear();
+    endwin();
 }

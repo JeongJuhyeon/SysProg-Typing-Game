@@ -19,6 +19,7 @@
 #define UPDATES_PER_SECOND 20
 #define SPAWN_TIME 1.5
 #define DROP_TIME 1
+#define ERASER "                                "
 
 // for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
@@ -69,6 +70,13 @@ static void test_add_word();
 static void test_delete_word();
 static void test_find_word();
 static void test_empty_list();
+static void test_draw_falling_words();
+
+// graphics functions
+
+void erase_falling_words();
+void draw_all_falling_words();
+void draw_new_falling_word(falling_word *new_word);
 
 //load words function
 int load_words(char * file_name, char ** word_list, int list_size);
