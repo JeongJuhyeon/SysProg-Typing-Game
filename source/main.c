@@ -64,6 +64,9 @@ int gameplay_loop_temp()
     char input_word[MAX_WORD_LENGTH];
     char input_letter;
 
+    printf("What happens if I print outside the loop?\n");
+
+
     while (1)
     {
         pause();      // wait for a signal (SIGALRM)
@@ -71,11 +74,11 @@ int gameplay_loop_temp()
         fflush(stdin);
         // every 50 ms, check whether a letter was entered
         // Because we use non-blocking mode, it does not block until the user enters something.
-        while ((input_letter = getchar()) != EOF &&
+        while ((input_letter = getch()) != ERR &&
                strchr("\n\033abcdefghijklmnopqrstuvwxyz", input_letter) == NULL);
 
         // handle input letter
-        if (input_letter != EOF)
+        if (input_letter != ERR)
         {
             handle_input_letter(input_word, input_letter);
         }
@@ -86,6 +89,7 @@ int gameplay_loop_temp()
             score += handle_input_word(input_word);
             if (DEBUG) printf("Score: %d\n", score);
         }
+
 
         // TODO ->
 
@@ -102,32 +106,19 @@ int gameplay_loop_temp()
         }
     }
 
-    tty_mode(1);
+    nodelay(stdscr,1);
 }
 
 //-------------Stage setup/cleanup functions-----------
-void level_finished(int user_won)
-{
-    struct itimerval itimer_stop;
-    falling_word *temp, *current;
-
-    empty_linked_list();
-
-    itimer_stop.it_interval.tv_sec = 0; // 0 s
-    itimer_stop.it_interval.tv_usec = 0; // 0 ms
-    itimer_stop.it_value.tv_sec = 0; // Start 0 secs after setting
-    itimer_stop.it_value.tv_usec = 0;
-
-    setitimer(ITIMER_REAL, &itimer_stop, NULL);
-    tty_mode(1);
-}
 
 void setup_gameplay_stage()
 {
+    nodelay(stdscr,1); // cause getch() to be non-blocking
+    noecho();          // cause getch() to be no-echo
+
     // clear virtual screen
     clear();
 
-    tty_mode(0);
     // set_cr_noecho_mode();
     // set_nodelay_mode();
 
@@ -135,6 +126,26 @@ void setup_gameplay_stage()
     signal(SIGALRM, handle_signal_50ms);
 
     srand(time(NULL));
+}
+
+
+void level_finished(int user_won)
+{
+    echo(); // cause getch to echo
+    clear();    // clear screen and refresh
+    refresh();
+
+    empty_linked_list(); // empty LL
+
+    // stop 50ms timer
+    struct itimerval itimer_stop;
+
+    itimer_stop.it_interval.tv_sec = 0; // 0 s
+    itimer_stop.it_interval.tv_usec = 0; // 0 ms
+    itimer_stop.it_value.tv_sec = 0; // Start 0 secs after setting
+    itimer_stop.it_value.tv_usec = 0;
+
+    setitimer(ITIMER_REAL, &itimer_stop, NULL);
 }
 
 //-------------Alarm functions--------------
@@ -310,7 +321,6 @@ int handle_input_word(char *input_word)
 void handle_esc()
 {
     // just EXIT ( To do : 'pause' )
-    tty_mode(1);
     exit(0);
 }
 
@@ -446,6 +456,7 @@ void erase_all_falling_words()
     for (falling_word *cur = head; cur != NULL; cur = cur->next) {
         move(cur->y, cur->x);
         strncpy(resized_eraser, ERASER, strlen(cur->word));
+        resized_eraser[strlen(cur->word)] = '\0';
         addstr(resized_eraser);
     }
 
@@ -457,6 +468,7 @@ void erase_falling_word(falling_word *word_to_erase)
     char resized_eraser[MAX_WORD_LENGTH];
     move(word_to_erase->y, word_to_erase->x);
     strncpy(resized_eraser, ERASER, strlen(word_to_erase->word));
+    resized_eraser[strlen(word_to_erase->word)] = '\0';
     addstr(resized_eraser);
 
     refresh();
