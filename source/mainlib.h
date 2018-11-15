@@ -13,11 +13,11 @@
 #define LIVES_AT_START    3
 #define DEBUG            0
 #define WORD_LIST_SIZE 5000
-#define ROWS 40
+#define ROWS 20
 #define FIELD_BOTTOM (ROWS - 6)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
-#define SPAWN_TIME 1.5
+#define SPAWN_TIME 0.7
 #define DROP_TIME 1
 #define ERASER "                                "
 
@@ -79,11 +79,8 @@ void erase_falling_word(falling_word *word_to_erase);
 void draw_all_falling_words();
 void draw_new_falling_word(falling_word *new_word);
 
-//load words function
+// file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
 
-// -------------TO-DO Functions---------------
-void drop_words_position();
 
-int check_words_bottom();
 
