@@ -82,5 +82,5 @@ void draw_new_falling_word(falling_word *new_word);
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
 
-
+void draw_ui();
 

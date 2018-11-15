@@ -125,6 +125,8 @@ void setup_gameplay_stage()
     signal(SIGALRM, handle_signal_50ms);
 
     srand(time(NULL));
+
+    draw_ui();
 }
 
 
@@ -610,4 +612,50 @@ MU_TEST(test_draw_falling_words)
     // exit curses screen
     clear();
     endwin();
+}
+
+void draw_ui()
+{
+    //draw ui box
+    for(int i = 0;i<=COLUMNS;i++)
+    {
+        move(ROWS+1, i); //upper cover
+        addch('=');
+        move(ROWS+9, i); //lower cover
+        addch('=');
+    }
+    for(int i = ROWS+2;i<=ROWS+8;i++)
+    {
+        move(i, 0); //left cover
+        addch('|');
+        move(i, COLUMNS); //right cover
+        addch('|');
+
+    }
+
+    //draw LIVES and SCORE
+    move(ROWS+8, COLUMNS/2-COLUMNS/5*2); //lives
+    printw("LIVES : 3");
+    move(ROWS+8, COLUMNS/2+COLUMNS/5*2-12); //score
+    printw("SCORE : 100");
+
+    //draw input Section
+    for(int i = 0;i<MAX_WORD_LENGTH;i++)
+    {
+        move(ROWS+6, (COLUMNS-MAX_WORD_LENGTH)/2 + i); //lower cover
+        addch('_');
+        move(ROWS+3, (COLUMNS-MAX_WORD_LENGTH)/2 + i); //upper cover
+        addch('_');
+    }
+
+    for(int i = 0;i<3;i++)
+    {
+        move(ROWS+4+i, (COLUMNS-MAX_WORD_LENGTH)/2-1); //left cover
+        addch('|');
+        move(ROWS+4+i, (COLUMNS-MAX_WORD_LENGTH)/2 + 30); //right cover
+        addch('|');
+    }
+
+
+
 }
