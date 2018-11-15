@@ -148,7 +148,7 @@ void handle_signal_50ms(int signum)
     // drop the words
     if (updates_done % (int) UPDATES_PER_SECOND * DROP_TIME == 0)
     {
-        erase_falling_words();
+        erase_all_falling_words();
         drop_words_position();
         draw_all_falling_words();
         lives_lost = check_words_bottom();
@@ -158,7 +158,6 @@ void handle_signal_50ms(int signum)
     if (updates_done % (int) UPDATES_PER_SECOND * SPAWN_TIME == 0)
     {
         spawn_word(word_list_global_ptr);
-        draw_new_falling_word(head);
     }
 
     if (updates_done >= 100000)
@@ -213,7 +212,9 @@ void spawn_word(char *word_list[])
     // Pick a random x coordinate
     int x = rand() % (COLUMNS - strlen(new_word) - 1);
     // Create and add the word
-    add_falling_word(create_falling_word(new_word, x, 0));
+    falling_word *new_falling_word = create_falling_word(new_word, x, 0);
+    add_falling_word(new_falling_word);
+    draw_new_falling_word(new_falling_word);
     // if (DEBUG) printf("New word: %s\n", new_word);
 }
 
@@ -232,18 +233,21 @@ void drop_words_position()
 int check_words_bottom()
 {
     falling_word *word = head;
-    int player_life = 0;
+    falling_word *next_word;
+    int words_at_bottom = 0;
 
     while (word)
     {
+        next_word = word->next; // do this first because we might delete the current word
         if (word->y == FIELD_BOTTOM)
         {
-            player_life++;
+            words_at_bottom++;
+            delete_falling_word(word);
         }
-        word = word->next; //go to the next word
+        word = next_word; //go to the next word
     }
 
-    return player_life;
+    return words_at_bottom;
 }
 
 
@@ -354,8 +358,9 @@ void tty_mode(int how)
 // Delete a node from the linked list
 int delete_falling_word(falling_word *word_to_delete)
 {
-
+    erase_falling_word(word_to_delete);
     //if (DEBUG) printf("Deleting %s.\nPrev: %p.\nNext: %p.\n Head is %p.\n", word_to_delete->word, word_to_delete->prev, word_to_delete->next, head);
+
 
     // If a previous node exist, we need to tie that one to the next
     if (word_to_delete->prev != NULL)
@@ -435,7 +440,7 @@ void empty_linked_list()
 
 //-----------------Graphics functions------------
 
-void erase_falling_words()
+void erase_all_falling_words()
 {
     char resized_eraser[MAX_WORD_LENGTH];
     for (falling_word *cur = head; cur != NULL; cur = cur->next) {
@@ -443,6 +448,16 @@ void erase_falling_words()
         strncpy(resized_eraser, ERASER, strlen(cur->word));
         addstr(resized_eraser);
     }
+
+    refresh();
+}
+
+void erase_falling_word(falling_word *word_to_erase)
+{
+    char resized_eraser[MAX_WORD_LENGTH];
+    move(word_to_erase->y, word_to_erase->x);
+    strncpy(resized_eraser, ERASER, strlen(word_to_erase->word));
+    addstr(resized_eraser);
 
     refresh();
 }
@@ -571,7 +586,7 @@ MU_TEST(test_draw_falling_words)
 
     draw_all_falling_words();
     sleep(2);
-    erase_falling_words();
+    erase_all_falling_words();
     drop_words_position();
     draw_all_falling_words();
 

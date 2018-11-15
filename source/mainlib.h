@@ -11,7 +11,7 @@
 
 #define MAX_WORD_LENGTH 30
 #define LIVES_AT_START    3
-#define DEBUG            1
+#define DEBUG            0
 #define WORD_LIST_SIZE 5000
 #define ROWS 40
 #define FIELD_BOTTOM (ROWS - 6)
@@ -74,7 +74,8 @@ static void test_draw_falling_words();
 
 // graphics functions
 
-void erase_falling_words();
+void erase_all_falling_words();
+void erase_falling_word(falling_word *word_to_erase);
 void draw_all_falling_words();
 void draw_new_falling_word(falling_word *new_word);
 
