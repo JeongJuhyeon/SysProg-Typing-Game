@@ -48,15 +48,28 @@ int main()
 
     initscr();
 
-    cbreak();       // Disables line buffering
-    setup_gameplay_stage();
-    if (DEBUG) printf("Gameplay stage setup complete. Head: %p\n", head);
-    gameplay_loop_temp();
+    char c;
+    int running = 1;
+    while(running) {
+        setup_menu();
+        switch (c = getch()) {
+            case '1':
+                setup_gameplay_stage();
+                gameplay_loop();
+                break;
+            case '2':
+
+            case '3':
+                running = 0;
+                break;
+        }
+    }
+
     return 0;
 }
 
 // Temporary version of the main loop
-int gameplay_loop_temp()
+int gameplay_loop()
 {
     char *word_list[WORD_LIST_SIZE];
     load_words("../words/words_5000", word_list, WORD_LIST_SIZE);
@@ -77,7 +90,11 @@ int gameplay_loop_temp()
                strchr("\n\033abcdefghijklmnopqrstuvwxyz", input_letter) == NULL);
 
         // handle input letter
-        if (input_letter != ERR)
+        if (input_letter == ESC) {
+            level_finished(0);
+            return;
+        }
+        else if (input_letter != ERR)
         {
             handle_input_letter(input_word, input_letter);
         }
@@ -108,10 +125,12 @@ int gameplay_loop_temp()
     nodelay(stdscr,1);
 }
 
+
 //-------------Stage setup/cleanup functions-----------
 
 void setup_gameplay_stage()
 {
+    cbreak();       // Disables line buffering
     nodelay(stdscr,1); // cause getch() to be non-blocking
     noecho();          // cause getch() to be no-echo
 
@@ -126,7 +145,74 @@ void setup_gameplay_stage()
 
     srand(time(NULL));
 
-    draw_ui();
+    draw_game_hud();
+}
+
+void setup_menu(){
+    char c = 0;
+
+    clear();
+    noecho();
+
+    //draw ui box
+    for(int i = 0;i<=COLUMNS;i++)
+    {
+        move(1, i); //upper cover
+        addch('=');
+        move(ROWS+9, i); //lower cover
+        addch('=');
+    }
+    for(int i = 2;i<=ROWS+8;i++)
+    {
+        move(i, 0); //left cover
+        addch('|');
+        move(i, COLUMNS); //right cover
+        addch('|');
+
+    }
+
+
+    //draw MENU
+    move(6, COLUMNS/2 - 9);
+    printw("        __ ");
+    move(7, COLUMNS/2 - 9);
+    printw("|\\  /| |__ |\\ | |  |");
+    move(8, COLUMNS/2 - 9);
+    printw("| \\/ | |__ | \\| |__|");
+
+
+
+    //draw input Section
+    for(int i = 0;i<COLUMNS-5;i++)
+    {
+        move(ROWS + 6, i + 3); //lower cover
+        addch('_');
+        move(3, i + 3); //upper cover
+        addch('_');
+    }
+
+    for(int i = 0;i<ROWS + 3;i++)
+    {
+
+        move(i + 4, 3); //left cover
+        addch('|');
+        move(i + 4, COLUMNS - 3); //right cover
+        addch('|');
+    }
+
+    //draw Selects
+
+    move(14, COLUMNS/2 - 5);
+    printw("1. PLAY");
+
+    move(17, COLUMNS/2 - 5);
+    printw("2. OPTIONS");
+
+    move(20, COLUMNS/2 - 5);
+    printw("3. EXIT");
+
+
+    return;
 }
 
 
@@ -147,6 +233,12 @@ void level_finished(int user_won)
     itimer_stop.it_value.tv_usec = 0;
 
     setitimer(ITIMER_REAL, &itimer_stop, NULL);
+}
+
+void prepare_game_exit()
+{
+	endwin();
+	
 }
 
 //-------------Alarm functions--------------
@@ -272,16 +364,11 @@ void handle_input_letter(char *input_word, char input_letter)
 
     switch (input_letter)
     {
-        case ESC:
-            // EXIT ( TO - DO -> 'pause' )
-            handle_esc();
-            break;
-
         case ENTER:
             // complete input_word by adding 'NULL' to array   +   index reset
             input_word[index++] = '\0';
             index = 0;
-            // finding and deleting word -> called from gameplay_loop_temp because of score
+            // finding and deleting word -> called from gameplay_loop because of score
             break;
 
         default:
@@ -317,12 +404,6 @@ int handle_input_word(char *input_word)
     {
         return 0;
     }
-}
-
-void handle_esc()
-{
-    // just EXIT ( To do : 'pause' )
-    exit(0);
 }
 
 
@@ -614,7 +695,7 @@ MU_TEST(test_draw_falling_words)
     endwin();
 }
 
-void draw_ui()
+void draw_game_hud()
 {
     //draw ui box
     for(int i = 0;i<=COLUMNS;i++)

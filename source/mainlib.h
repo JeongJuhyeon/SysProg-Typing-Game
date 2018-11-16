@@ -13,8 +13,8 @@
 #define LIVES_AT_START    3
 #define DEBUG            0
 #define WORD_LIST_SIZE 5000
-#define ROWS 20
-#define FIELD_BOTTOM (ROWS - 6)
+#define ROWS 25
+#define FIELD_BOTTOM (ROWS - 11)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
 #define SPAWN_TIME 0.7
@@ -45,9 +45,14 @@ void empty_linked_list();
 void drop_words_position(void);
 int check_words_bottom(void);
 void level_finished(int user_won);
-int gameplay_loop_temp(void);
-void setup_gameplay_stage(void);
 void spawn_word(char *word_list[]);
+int gameplay_loop(void);
+
+// stage change functions
+void setup_gameplay_stage(void);
+void setup_menu();
+void draw_game_hud();
+
 
 // alarm, timer, update functions
 void set_50ms_timer(void);
@@ -82,5 +87,4 @@ void draw_new_falling_word(falling_word *new_word);
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
 
-void draw_ui();
 
