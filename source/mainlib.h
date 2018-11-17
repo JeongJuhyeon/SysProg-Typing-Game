@@ -10,11 +10,11 @@
 //--------#define numbers/settings----------
 
 #define MAX_WORD_LENGTH 30
-#define LIVES_AT_START    3
+#define LIVES_AT_START    6
 #define DEBUG            0
 #define WORD_LIST_SIZE 5000
 #define ROWS 25
-#define FIELD_BOTTOM (ROWS - 11)
+#define FIELD_BOTTOM (ROWS - 10)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
 #define SPAWN_TIME 0.7

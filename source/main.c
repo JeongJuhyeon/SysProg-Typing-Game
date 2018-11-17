@@ -113,7 +113,7 @@ int gameplay_loop()
         {
             remaining_lives -= lives_lost;
             lives_lost = 0;
-            printf("\n---------\nLives left: %d, Score: %d\n------", remaining_lives, score);
+            //printf("\n---------\nLives left: %d, Score: %d\n------", remaining_lives, score);
             if (remaining_lives <= 0)
             {
                 level_finished(0);
@@ -152,17 +152,21 @@ void setup_menu(){
     char c = 0;
 
     clear();
-    noecho();
+
+    cbreak();       // Disables line buffering
+    nodelay(stdscr,0); // cause getch() to be blocking (wait for input)
+    noecho();       // cause getch() to be no-echo
+    curs_set(0);    // disable cursor
 
     //draw ui box
     for(int i = 0;i<=COLUMNS;i++)
     {
         move(1, i); //upper cover
         addch('=');
-        move(ROWS+9, i); //lower cover
+        move(ROWS-1, i); //lower cover
         addch('=');
     }
-    for(int i = 2;i<=ROWS+8;i++)
+    for(int i = 2;i<=ROWS-2;i++)
     {
         move(i, 0); //left cover
         addch('|');
@@ -185,13 +189,13 @@ void setup_menu(){
     //draw input Section
     for(int i = 0;i<COLUMNS-5;i++)
     {
-        move(ROWS + 6, i + 3); //lower cover
+        move(ROWS - 4, i + 3); //lower cover
         addch('_');
         move(3, i + 3); //upper cover
         addch('_');
     }
 
-    for(int i = 0;i<ROWS + 3;i++)
+    for(int i = 0;i<ROWS - 7;i++)
     {
 
         move(i + 4, 3); //left cover
@@ -252,10 +256,10 @@ void handle_signal_50ms(int signum)
     // drop the words
     if (updates_done % (int) UPDATES_PER_SECOND * DROP_TIME == 0)
     {
+        lives_lost = check_words_bottom();
         erase_all_falling_words();
         drop_words_position();
         draw_all_falling_words();
-        lives_lost = check_words_bottom();
     }
 
     // spawn a new word
@@ -532,6 +536,50 @@ void empty_linked_list()
 
 //-----------------Graphics functions------------
 
+void draw_game_hud()
+{
+    //draw ui box
+    for(int i = 0;i<=COLUMNS;i++)
+    {
+        move(ROWS-9, i); //upper cover
+        addch('=');
+        move(ROWS-1, i); //lower cover
+        addch('=');
+    }
+    for(int i = ROWS-8;i<=ROWS-2;i++)
+    {
+        move(i, 0); //left cover
+        addch('|');
+        move(i, COLUMNS); //right cover
+        addch('|');
+
+    }
+
+    //draw LIVES and SCORE
+    move(ROWS-2, COLUMNS/2-COLUMNS/5*2); //lives
+    printw("LIVES : 3");
+    move(ROWS-2, COLUMNS/2+COLUMNS/5*2-12); //score
+    printw("SCORE : 100");
+
+    //draw input Section
+    for(int i = 0;i<MAX_WORD_LENGTH;i++)
+    {
+        move(ROWS-4, (COLUMNS-MAX_WORD_LENGTH)/2 + i); //lower cover
+        addch('_');
+        move(ROWS-7, (COLUMNS-MAX_WORD_LENGTH)/2 + i); //upper cover
+        addch('_');
+    }
+
+    for(int i = 0;i<3;i++)
+    {
+        move(ROWS-6+i, (COLUMNS-MAX_WORD_LENGTH)/2-1); //left cover
+        addch('|');
+        move(ROWS-6+i, (COLUMNS-MAX_WORD_LENGTH)/2 + 30); //right cover
+        addch('|');
+    }
+
+}
+
 void erase_all_falling_words()
 {
     char resized_eraser[MAX_WORD_LENGTH];
@@ -695,48 +743,3 @@ MU_TEST(test_draw_falling_words)
     endwin();
 }
 
-void draw_game_hud()
-{
-    //draw ui box
-    for(int i = 0;i<=COLUMNS;i++)
-    {
-        move(ROWS+1, i); //upper cover
-        addch('=');
-        move(ROWS+9, i); //lower cover
-        addch('=');
-    }
-    for(int i = ROWS+2;i<=ROWS+8;i++)
-    {
-        move(i, 0); //left cover
-        addch('|');
-        move(i, COLUMNS); //right cover
-        addch('|');
-
-    }
-
-    //draw LIVES and SCORE
-    move(ROWS+8, COLUMNS/2-COLUMNS/5*2); //lives
-    printw("LIVES : 3");
-    move(ROWS+8, COLUMNS/2+COLUMNS/5*2-12); //score
-    printw("SCORE : 100");
-
-    //draw input Section
-    for(int i = 0;i<MAX_WORD_LENGTH;i++)
-    {
-        move(ROWS+6, (COLUMNS-MAX_WORD_LENGTH)/2 + i); //lower cover
-        addch('_');
-        move(ROWS+3, (COLUMNS-MAX_WORD_LENGTH)/2 + i); //upper cover
-        addch('_');
-    }
-
-    for(int i = 0;i<3;i++)
-    {
-        move(ROWS+4+i, (COLUMNS-MAX_WORD_LENGTH)/2-1); //left cover
-        addch('|');
-        move(ROWS+4+i, (COLUMNS-MAX_WORD_LENGTH)/2 + 30); //right cover
-        addch('|');
-    }
-
-
-
-}
