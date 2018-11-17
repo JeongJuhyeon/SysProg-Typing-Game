@@ -52,7 +52,7 @@ int gameplay_loop(void);
 void setup_gameplay_stage(void);
 void setup_menu();
 void draw_game_hud();
-
+void prepare_game_exit();
 
 // alarm, timer, update functions
 void set_50ms_timer(void);

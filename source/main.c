@@ -61,6 +61,7 @@ int main()
 
             case '3':
                 running = 0;
+                prepare_game_exit();
                 break;
         }
     }
@@ -242,7 +243,6 @@ void level_finished(int user_won)
 void prepare_game_exit()
 {
 	endwin();
-	
 }
 
 //-------------Alarm functions--------------
