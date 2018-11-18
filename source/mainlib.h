@@ -83,6 +83,7 @@ void erase_all_falling_words();
 void erase_falling_word(falling_word *word_to_erase);
 void draw_all_falling_words();
 void draw_new_falling_word(falling_word *new_word);
+void draw_splash_screen();
 
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);

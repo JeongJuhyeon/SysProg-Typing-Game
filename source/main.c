@@ -536,6 +536,30 @@ void empty_linked_list()
 
 //-----------------Graphics functions------------
 
+void draw_splash_screen()
+{
+	int fd;
+	char line[200];
+	int x = 0, y = 0;
+
+	fd = fopen("../resources/splash", O_RDONLY);
+
+	if (fd == -1)
+	{
+		printf("FD Error.... \n");
+		exit(1);
+	} 
+
+	fgets(line, 200, stdin);
+	while (!feof(fd))
+	{
+		addstr(line);
+		y++;
+		move(x, y);
+		fgets(line, 200, stdin);
+	}
+}
+
 void draw_game_hud()
 {
     //draw ui box
