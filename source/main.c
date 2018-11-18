@@ -50,6 +50,8 @@ int main()
 
     char c;
     int running = 1;
+
+	draw_splash_screen();
     while(running) {
         setup_menu();
         switch (c = getch()) {
@@ -358,7 +360,6 @@ int check_words_bottom()
     return words_at_bottom;
 }
 
-
 // -------------User Input Functions ------------
 void handle_input_letter(char *input_word, char input_letter)
 {
@@ -558,6 +559,10 @@ void draw_splash_screen()
 		move(x, y);
 		fgets(line, 200, stdin);
 	}
+
+	mdelay(200); //200ms 동안 기다린다.(화면에 띄운다)
+	
+	clear();
 }
 
 void draw_game_hud()
