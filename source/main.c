@@ -19,7 +19,7 @@ falling_word *head = NULL;                 // head of falling_word linked list
  * by signals cant return values or take parameters.
  * example: signal(SIGLARM, handle_signal_50ms) */
 int lives_lost = 0;                                     // can't update this when called by signal handler
-char **word_list_global_ptr = NULL;                      // can't send this as parameter to signal handler
+char **word_list_global_ptr = NULL;                     // can't send this as parameter to signal handler
 
 
 // Tests the functions related to manipulating the linked list
@@ -52,6 +52,9 @@ int main()
     int running = 1;
 
 	draw_splash_screen();
+    getch();
+
+
     while(running) {
         setup_menu();
         switch (c = getch()) {
@@ -72,10 +75,10 @@ int main()
 }
 
 // Temporary version of the main loop
-int gameplay_loop()
+void gameplay_loop()
 {
     char *word_list[WORD_LIST_SIZE];
-    load_words("../words/words_5000", word_list, WORD_LIST_SIZE);
+    load_words("../resources/words_5000", word_list, WORD_LIST_SIZE);
     int remaining_lives = LIVES_AT_START;
     int score = 0;
 
@@ -539,28 +542,34 @@ void empty_linked_list()
 
 void draw_splash_screen()
 {
-	int fd;
-	char line[200];
-	int x = 0, y = 0;
+    clear();
+    curs_set(0);    // disable cursor
 
-	fd = fopen("../resources/splash", O_RDONLY);
+	char line[80];
+	int y = 5;
 
-	if (fd == -1)
+	FILE *fd = fopen("../resources/splash4", "r");
+
+	if (!fd)
 	{
 		printf("FD Error.... \n");
 		exit(1);
-	} 
-
-	fgets(line, 200, stdin);
-	while (!feof(fd))
-	{
-		addstr(line);
-		y++;
-		move(x, y);
-		fgets(line, 200, stdin);
 	}
 
-	mdelay(200); //200ms 동안 기다린다.(화면에 띄운다)
+    fgets(line, 80, fd);
+	while (!feof(fd))
+	{
+        move(y, 0);
+		addstr(line);
+        fgets(line, 80, fd);
+        y++;
+	}
+
+    y += 3;
+    move(y, 19);
+    addstr("Press any key to continue");
+
+	refresh();
 }
 
 void draw_game_hud()
@@ -738,7 +747,7 @@ MU_TEST(test_draw_falling_words)
 {
     // to spawn words
     char *word_list[WORD_LIST_SIZE];
-    load_words("../words/words_5000", word_list, WORD_LIST_SIZE);
+    load_words("../resources/words_5000", word_list, WORD_LIST_SIZE);
 
     // add some words
     spawn_word(word_list_global_ptr);

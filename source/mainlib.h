@@ -46,7 +46,7 @@ void drop_words_position(void);
 int check_words_bottom(void);
 void level_finished(int user_won);
 void spawn_word(char *word_list[]);
-int gameplay_loop(void);
+void gameplay_loop(void);
 
 // stage change functions
 void setup_gameplay_stage(void);
