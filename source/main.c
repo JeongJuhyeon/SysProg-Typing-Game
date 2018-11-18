@@ -561,8 +561,6 @@ void draw_splash_screen()
 	}
 
 	mdelay(200); //200ms 동안 기다린다.(화면에 띄운다)
-	
-	clear();
 }
 
 void draw_game_hud()
