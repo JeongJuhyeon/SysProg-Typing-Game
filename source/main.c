@@ -109,6 +109,12 @@ void gameplay_loop()
         {
             if (DEBUG) printf("Detected ENTER\n");
             score += handle_input_word(input_word);
+			// SCORE REFRESH
+			move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
+			printw("            ");// 12 space reset
+			printw("SCORE : %d", score);
+			refresh();
+			//1118
             if (DEBUG) printf("Score: %d\n", score);
         }
 
@@ -118,6 +124,13 @@ void gameplay_loop()
         if (lives_lost > 0)
         {
             remaining_lives -= lives_lost;
+			//LIVES REFRESH
+			move(ROWS - 2, COLUMNS / 2 - COLUMNS / 5 * 2); 
+			printw("            ");// 12 space reset
+			printw("LIVES : %d", remaining_lives);
+			refresh();
+			//1118
+
             lives_lost = 0;
             //printf("\n---------\nLives left: %d, Score: %d\n------", remaining_lives, score);
             if (remaining_lives <= 0)
@@ -386,6 +399,12 @@ void handle_input_letter(char *input_word, char input_letter)
             } else if (index < MAX_WORD_LENGTH - 1)
             { // '\0' can be in the last address
                 input_word[index++] = input_letter;
+				// INPUT WORD REFRESH
+				move(ROWS - 6 + 2, (COLUMNS- MAX_WORD_LENGTH)/2);
+				printw("                              "); // 30 space reset
+				printw("%s", input_word);
+				refresh();
+				//1118
             }
             break;
     }
@@ -593,9 +612,9 @@ void draw_game_hud()
 
     //draw LIVES and SCORE
     move(ROWS-2, COLUMNS/2-COLUMNS/5*2); //lives
-    printw("LIVES : 3");
+    printw("LIVES : %d", LIVES_AT_START);
     move(ROWS-2, COLUMNS/2+COLUMNS/5*2-12); //score
-    printw("SCORE : 100");
+    printw("SCORE : %d", 0);
 
     //draw input Section
     for(int i = 0;i<MAX_WORD_LENGTH;i++)
