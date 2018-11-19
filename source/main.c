@@ -85,6 +85,8 @@ void gameplay_loop()
     char input_word[MAX_WORD_LENGTH];
     char input_letter;
 
+	int i; // for 
+
     while (1)
     {
         pause();      // wait for a signal (SIGALRM)
@@ -104,10 +106,15 @@ void gameplay_loop()
         {
             handle_input_letter(input_word, input_letter);
         }
+
         // if the user pressed enter, process the word
         if (input_letter == ENTER)
         {
             if (DEBUG) printf("Detected ENTER\n");
+
+			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+			printw("                              "); // 30 space reset
+			
             score += handle_input_word(input_word);
 			// SCORE REFRESH
 			move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
@@ -117,6 +124,9 @@ void gameplay_loop()
 			refresh();
 			//1118
             if (DEBUG) printf("Score: %d\n", score);
+
+			for(i=0;i<MAX_WORD_LENGTH;i++)
+				input_word[i] = '\0';
         }
 
 
@@ -402,10 +412,10 @@ void handle_input_letter(char *input_word, char input_letter)
             { // '\0' can be in the last address
                 input_word[index++] = input_letter;
 				// INPUT WORD REFRESH
-				move(ROWS - 6 + 2, (COLUMNS- MAX_WORD_LENGTH)/2);
+				move(ROWS - 6 + 1, (COLUMNS- MAX_WORD_LENGTH)/2);
 				printw("                              "); // 30 space reset
-				move(ROWS - 6 + 2, (COLUMNS - MAX_WORD_LENGTH) / 2);
-				printw("%s", input_word);
+				move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+				addstr(input_word);
 				refresh();
 				//1118
             }
