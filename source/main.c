@@ -112,6 +112,7 @@ void gameplay_loop()
 			// SCORE REFRESH
 			move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
 			printw("            ");// 12 space reset
+			move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
 			printw("SCORE : %d", score);
 			refresh();
 			//1118
@@ -127,6 +128,7 @@ void gameplay_loop()
 			//LIVES REFRESH
 			move(ROWS - 2, COLUMNS / 2 - COLUMNS / 5 * 2); 
 			printw("            ");// 12 space reset
+			move(ROWS - 2, COLUMNS / 2 - COLUMNS / 5 * 2);
 			printw("LIVES : %d", remaining_lives);
 			refresh();
 			//1118
@@ -402,6 +404,7 @@ void handle_input_letter(char *input_word, char input_letter)
 				// INPUT WORD REFRESH
 				move(ROWS - 6 + 2, (COLUMNS- MAX_WORD_LENGTH)/2);
 				printw("                              "); // 30 space reset
+				move(ROWS - 6 + 2, (COLUMNS - MAX_WORD_LENGTH) / 2);
 				printw("%s", input_word);
 				refresh();
 				//1118
