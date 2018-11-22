@@ -6,6 +6,7 @@
 #include <sys/time.h>                       // for time structs
 #include <termios.h>                        // for TTY mode settings
 #include <curses.h>                         // Curses
+#include <stdbool.h>
 
 // #include "minunit_3line.h"               // for unit testing
 #include "minunit.h"                        // for slightly more convenient unit testing
@@ -19,7 +20,9 @@ falling_word *head = NULL;                 // head of falling_word linked list
  * by signals cant return values or take parameters.
  * example: signal(SIGLARM, handle_signal_50ms) */
 int lives_lost = 0;                                     // can't update this when called by signal handler
+bool level_clear_flag = false;
 int level = 1;                                          // can't send this as parameter to signal handler
+int score = 0;
 char **word_list_global_ptr = NULL;                     // can't send this as parameter to signal handler
 
 
@@ -48,42 +51,71 @@ int main() {
 
     char c;
     int running = 1;
+    int level_clear = 0;
 
     draw_splash_screen();
     getch();
 
 
     while (running) {
-        setup_menu();
-        switch (c = getch()) {
-            case '1':
-                setup_gameplay_stage();
-                gameplay_loop();
-                break;
-            case '2':
-
-            case '3':
-                running = 0;
-                prepare_game_exit();
-                break;
+        if (!level_clear) {
+            setup_main_menu();
+            switch (c = getch()) {
+                case '1':
+                    setup_gameplay_stage();
+                    refresh();
+                    level_clear = gameplay_loop();
+                    break;
+                case '2':
+                    //load_game();
+                case '3':
+                    running = 0;
+                    prepare_game_exit();
+                    break;
+            }
+        }
+        else if (level_clear){
+            level_clear = 0;
+            //TODO
+            /*setup_level_clear_menu();
+              switch (c = getch()) {
+                case '1':
+                    setup_gameplay_stage();
+                    refresh();
+                    level_clear = gameplay_loop();
+                    break;
+                case '2':
+                    //save_game();
+                case '3':
+                    running = 0;
+                    prepare_game_exit();
+                    break;
+            }*/
         }
     }
+
 
     return 0;
 }
 
 // Temporary version of the main loop
-void gameplay_loop() {
+int gameplay_loop() {
     char *word_list[WORD_LIST_SIZE];
     load_words("../resources/words_5000", word_list, WORD_LIST_SIZE);
     int remaining_lives = LIVES_AT_START;
-    int score = 0;
 
     char input_word[MAX_WORD_LENGTH];
     char input_letter;
 
+    level_clear_flag = false;
+
     while (1) {
         pause();      // wait for a signal (SIGALRM)
+        if (level_clear_flag) {
+            level_finished(1);
+            level_clear_flag = false;
+            return 1;
+        }
 
         fflush(stdin);
         // every 50 ms, check whether a letter was entered
@@ -94,7 +126,7 @@ void gameplay_loop() {
         // handle input letter
         if (input_letter == ESC) {
             level_finished(0);
-            return;
+            return 0;
         } else if (input_letter != ERR) {
             handle_input_letter(input_word, input_letter);
         }
@@ -148,7 +180,7 @@ void setup_gameplay_stage() {
     draw_game_hud();
 }
 
-void setup_menu() {
+void setup_main_menu() {
     char c = 0;
 
     clear();
@@ -203,10 +235,10 @@ void setup_menu() {
     //draw Selects
 
     move(14, COLUMNS / 2 - 5);
-    printw("1. PLAY");
+    printw("1. NEW GAME");
 
     move(17, COLUMNS / 2 - 5);
-    printw("2. OPTIONS");
+    printw("2. CONTINUE");
 
     move(20, COLUMNS / 2 - 5);
     printw("3. EXIT");
@@ -256,17 +288,20 @@ void handle_signal_50ms(int signum) {
         draw_all_falling_words();
     }
 
+    // every second refresh time displayed
+    if (updates_done % (int) UPDATES_PER_SECOND == 0) {
+        refresh_time(LEVEL_TIME - updates_done / UPDATES_PER_SECOND);
+    }
+
     // spawn a new word
     if (updates_done % (int) UPDATES_PER_SECOND * SPAWN_TIME == 0) {
         spawn_word(word_list_global_ptr);
     }
 
-    if (updates_done >= (int) UPDATES_PER_SECOND * 60) {
-        level_finished(1);
+    if (updates_done >= (int) UPDATES_PER_SECOND * LEVEL_TIME) {
+        level_clear_flag = true;
+		updates_done = 0;
     }
-
-    if (updates_done >= 100000)
-        updates_done = 0;
 
     return;
 }
@@ -276,7 +311,7 @@ void set_50ms_timer() {
     struct itimerval itimer_50ms;
     itimer_50ms.it_interval.tv_sec = 0; // 0 s
     itimer_50ms.it_interval.tv_usec = 50000; // 50 ms
-    itimer_50ms.it_value.tv_sec = 1; // Start 2 secs after setting
+    itimer_50ms.it_value.tv_sec = 1; // Start 1 secs after setting
     itimer_50ms.it_value.tv_usec = 0;
 
     setitimer(ITIMER_REAL, &itimer_50ms, NULL);
@@ -554,8 +589,13 @@ void draw_game_hud() {
     //draw LIVES and SCORE
     move(ROWS - 2, COLUMNS / 2 - COLUMNS / 5 * 2); //lives
     printw("LIVES: %d", LIVES_AT_START);
-    move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
-    printw("SCORE: %d", 0);
+    move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 8); //score
+    printw("SCORE: %d", score);
+
+    // draw time
+
+    move(ROWS - 2, COLUMNS / 2 - 3); //lives
+    printw("TIME: %d", LEVEL_TIME);
 
     //draw input Section
     for (int i = 0; i < MAX_WORD_LENGTH; i++) {
@@ -580,9 +620,9 @@ void refresh_score_clear_input_box(int score) {
     printw("                              \0"); // 30 space reset
 
     // SCORE REFRESH
-    move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
+    move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 8); //score
     printw("            ");// 12 space reset
-    move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 12); //score
+    move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 8); //score
     printw("SCORE: %d", score);
     refresh();
 }
@@ -593,6 +633,12 @@ void refresh_lives(int remaining_lives) {
     printw("            ");// 12 space reset
     move(ROWS - 2, COLUMNS / 2 - COLUMNS / 5 * 2);
     printw("LIVES: %d", remaining_lives);
+    refresh();
+}
+
+void refresh_time(int seconds) {
+    move(ROWS - 2, COLUMNS / 2 + 3); //lives
+    printw("%2d", seconds);
     refresh();
 }
 

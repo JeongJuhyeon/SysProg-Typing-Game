@@ -17,9 +17,10 @@
 #define FIELD_BOTTOM (ROWS - 10)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
-#define SPAWN_TIME 0.7
+#define SPAWN_TIME 2
 #define DROP_TIME 1
 #define ERASER "                                "
+#define LEVEL_TIME 60
 
 // for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
@@ -46,11 +47,11 @@ void drop_words_position(void);
 int check_words_bottom(void);
 void level_finished(int user_won);
 void spawn_word(char *word_list[]);
-void gameplay_loop(void);
+int gameplay_loop(void);
 
 // stage change functions
 void setup_gameplay_stage(void);
-void setup_menu();
+void setup_main_menu();
 void draw_game_hud();
 void prepare_game_exit();
 
@@ -86,6 +87,7 @@ void draw_new_falling_word(falling_word *new_word);
 void draw_splash_screen();
 void refresh_score_clear_input_box();
 void refresh_lives();
+void refresh_time(int seconds);
 
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
