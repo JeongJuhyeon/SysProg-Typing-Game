@@ -7,6 +7,7 @@
 #include <termios.h>                        // for TTY mode settings
 #include <curses.h>                         // Curses
 #include <stdbool.h>
+#include <string.h>
 
 // #include "minunit_3line.h"               // for unit testing
 #include "minunit.h"                        // for slightly more convenient unit testing
@@ -67,7 +68,8 @@ int main() {
                     level_clear = gameplay_loop();
                     break;
                 case '2':
-                    //load_game();
+                    load_your_level();
+                    continue;
                 case '3':
                     running = 0;
                     prepare_game_exit();
@@ -678,6 +680,31 @@ void draw_new_falling_word(falling_word *new_word) {
     addstr(new_word->word);
 
     refresh();
+}
+
+void load_your_level()
+{
+    FILE * open_fd;
+    char * pathname = "../saves/your_save";
+    int number;
+    char temp[200];
+
+    open_fd = fopen(pathname, "r");
+
+    if(!open_fd)
+    {
+        printf("There is no file\n");
+        return;
+    }
+
+
+    fscanf(open_fd, "%s %d", temp, &level);
+
+    fscanf(open_fd, "%s %d", temp, &score);
+
+    fclose(open_fd);
+
+    return;
 }
 
 

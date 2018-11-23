@@ -91,5 +91,4 @@ void refresh_time(int seconds);
 
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
-
-
+void load_your_level();
