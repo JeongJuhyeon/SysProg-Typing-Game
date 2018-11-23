@@ -63,13 +63,18 @@ int main() {
             setup_main_menu();
             switch (c = getch()) {
                 case '1':
+                    level = 1;
+                    score = 0;
                     setup_gameplay_stage();
                     refresh();
                     level_clear = gameplay_loop();
                     break;
                 case '2':
                     load_your_level();
-                    continue;
+                    setup_gameplay_stage();
+                    refresh();
+                    level_clear = gameplay_loop();
+                    break;
                 case '3':
                     running = 0;
                     prepare_game_exit();
