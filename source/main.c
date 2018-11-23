@@ -61,10 +61,8 @@ int main() {
 
             if (menu_selection == SAVE_GAME) {
                 save_game();
-                level_clear = true;
-                continue;
             }
-            else {
+            else {             // CONTINUE
                 setup_gameplay_stage();
                 level_clear = gameplay_loop();
             }
@@ -470,9 +468,7 @@ void handle_input_letter(char *input_word, char input_letter) {
     //if (DEBUG && input_letter != EOF) printf("Char entered: %c, input_letter: %d\n", input_letter, input_letter);
 
     switch (input_letter) {
-
         case BACKSPACE:
-
             if (index <= 0) { // IF empty
                 ;
             } else if (index > 0) { // '\0' can be in the last address
@@ -515,7 +511,7 @@ void handle_input_letter(char *input_word, char input_letter) {
 int handle_input_word(char *input_word) {
     if (DEBUG) printf("Input word: %s\n", input_word);
 
-    int returnScore = 1; // score of a word -> ? just 1 ?
+    int returnScore = strlen(input_word) * 10; // score of a word -> ? just 1 ?
     falling_word *searched_pointer = NULL;
     searched_pointer = find_falling_word(input_word);    // search the word
 
@@ -694,8 +690,11 @@ void draw_game_hud() {
 
     // draw time
 
-    move(ROWS - 2, COLUMNS / 2 - 3); //lives
+    move(ROWS - 2, COLUMNS / 2 - 3);
     printw("TIME: %d", LEVEL_TIME);
+
+    move(ROWS - 8, COLUMNS / 2 - 4); //draw level
+    printw("LEVEL: %d", level);
 
     //draw input Section
     for (int i = 0; i < MAX_WORD_LENGTH; i++) {
