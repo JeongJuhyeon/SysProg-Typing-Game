@@ -24,6 +24,8 @@
 
 // for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
+enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', EXIT = '3'};
+enum level_clear_menu_choice { CONTINUE = '1', SAVE_GAME = '2'};
 
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
@@ -47,13 +49,17 @@ void drop_words_position(void);
 int check_words_bottom(void);
 void level_finished(int user_won);
 void spawn_word(char *word_list[]);
-int gameplay_loop(void);
 
 // stage change functions
 void setup_gameplay_stage(void);
 void setup_main_menu();
 void draw_game_hud();
 void prepare_game_exit();
+
+// stages
+void splash_screen();
+char main_menu();
+bool gameplay_loop(void);
 
 // alarm, timer, update functions
 void set_50ms_timer(void);
@@ -91,4 +97,4 @@ void refresh_time(int seconds);
 
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
-void load_your_level();
+void load_saved_game();

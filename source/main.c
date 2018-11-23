@@ -44,69 +44,69 @@ MU_TEST_SUITE(graphics_tests) {
 int main() {
     //MU_RUN_SUITE(graphics_tests);
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
-    if (DEBUG) printf("Head: %p\n", head);
     MU_REPORT(); // Report the results
-    if (DEBUG) printf("Head: %p\n", head);
 
-    initscr();
+    char menu_selection;
+    bool level_clear = false;
 
-    char c;
-    int running = 1;
-    int level_clear = 0;
-
-    draw_splash_screen();
-    getch();
-
-
-    while (running) {
-        if (!level_clear) {
-            setup_main_menu();
-            switch (c = getch()) {
-                case '1':
-                    level = 1;
-                    score = 0;
-                    setup_gameplay_stage();
-                    refresh();
-                    level_clear = gameplay_loop();
-                    break;
-                case '2':
-                    load_your_level();
-                    setup_gameplay_stage();
-                    refresh();
-                    level_clear = gameplay_loop();
-                    break;
-                case '3':
-                    running = 0;
-                    prepare_game_exit();
-                    break;
-            }
-        }
-        else if (level_clear){
+    splash_screen();
+    while (true) {
+        // After clearing a level
+        if (level_clear){
             level_clear = 0;
             //TODO
             /*setup_level_clear_menu();
               switch (c = getch()) {
-                case '1':
+                case CONTINUE:
                     setup_gameplay_stage();
                     refresh();
                     level_clear = gameplay_loop();
                     break;
-                case '2':
+                case SAVE_GAME:
                     //save_game();
-                case '3':
+                case EXIT:
                     running = 0;
                     prepare_game_exit();
                     break;
             }*/
         }
+        // Starting the game
+        else {
+            menu_selection = main_menu();
+            if (menu_selection == EXIT) {
+                prepare_game_exit();
+                break;
+            }
+
+            if (menu_selection == LOAD_GAME)
+                load_saved_game();
+            else {                              // NEW GAME
+                level = 1;
+                score = 0;
+            }
+
+            setup_gameplay_stage();
+            level_clear = gameplay_loop();
+        }
     }
-
-
+    
     return 0;
 }
 
-// Temporary version of the main loop
-int gameplay_loop() {
+char main_menu(){
+    setup_main_menu();
+    return getch();
+}
+
+void splash_screen(){
+    initscr();
+    draw_splash_screen();
+    getch(); // wait for key press during splash screen
+}
+
+// Main gameplay_loop
+// returns: True if level clear, False if not
+bool gameplay_loop() {
     char *word_list[WORD_LIST_SIZE];
     load_words("../resources/words_5000", word_list, WORD_LIST_SIZE);
     int remaining_lives = LIVES_AT_START;
@@ -121,7 +121,7 @@ int gameplay_loop() {
         if (level_clear_flag) {
             level_finished(1);
             level_clear_flag = false;
-            return 1;
+            return true;
         }
 
         fflush(stdin);
@@ -133,7 +133,7 @@ int gameplay_loop() {
         // handle input letter
         if (input_letter == ESC) {
             level_finished(0);
-            return 0;
+            return false;
         } else if (input_letter != ERR) {
             handle_input_letter(input_word, input_letter);
         }
@@ -619,6 +619,7 @@ void draw_game_hud() {
         addch('|');
     }
 
+    refresh();
 }
 
 void refresh_score_clear_input_box(int score) {
@@ -687,7 +688,7 @@ void draw_new_falling_word(falling_word *new_word) {
     refresh();
 }
 
-void load_your_level()
+void load_saved_game()
 {
     FILE * open_fd;
     char * pathname = "../saves/your_save";
