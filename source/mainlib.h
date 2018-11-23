@@ -55,10 +55,12 @@ void setup_gameplay_stage(void);
 void setup_main_menu();
 void draw_game_hud();
 void prepare_game_exit();
+void setup_level_clear_menu() ;
 
 // stages
 void splash_screen();
 char main_menu();
+char clear_menu();
 bool gameplay_loop(void);
 
 // alarm, timer, update functions
@@ -97,3 +99,4 @@ void refresh_time(int seconds);
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
 void load_saved_game();
+void save_your_level();

@@ -54,21 +54,21 @@ int main() {
         // After clearing a level
         if (level_clear){
             level_clear = 0;
-            //TODO
-            /*setup_level_clear_menu();
-              switch (c = getch()) {
-                case CONTINUE:
-                    setup_gameplay_stage();
-                    refresh();
-                    level_clear = gameplay_loop();
-                    break;
-                case SAVE_GAME:
-                    //save_game();
-                case EXIT:
-                    running = 0;
-                    prepare_game_exit();
-                    break;
-            }*/
+            menu_selection = clear_menu();
+            if (menu_selection == EXIT) {
+                prepare_game_exit();
+                break;
+            }
+
+            if (menu_selection == SAVE_GAME)
+            {
+                save_your_level();
+                level_clear = 1;
+                continue;
+            }
+
+            setup_gameplay_stage();
+            level_clear = gameplay_loop();
         }
         // Starting the game
         else {
@@ -94,8 +94,23 @@ int main() {
 }
 
 char main_menu(){
+    char input_letter;
+
     setup_main_menu();
-    return getch();
+
+    while((input_letter = getch())!=ERR && strchr("123", input_letter)==NULL);
+
+    return input_letter;
+}
+
+char clear_menu(){
+    char input_letter;
+
+    setup_level_clear_menu();
+
+    while((input_letter = getch())!=ERR && strchr("123", input_letter)==NULL);
+
+    return input_letter;
 }
 
 void splash_screen(){
@@ -190,8 +205,6 @@ void setup_gameplay_stage() {
 }
 
 void setup_main_menu() {
-    char c = 0;
-
     clear();
 
     cbreak();       // Disables line buffering
@@ -248,6 +261,70 @@ void setup_main_menu() {
 
     move(17, COLUMNS / 2 - 5);
     printw("2. CONTINUE");
+
+    move(20, COLUMNS / 2 - 5);
+    printw("3. EXIT");
+
+
+    return;
+}
+
+void setup_level_clear_menu() {
+    clear();
+
+    cbreak();       // Disables line buffering
+    nodelay(stdscr, 0); // cause getch() to be blocking (wait for input)
+    noecho();       // cause getch() to be no-echo
+    curs_set(0);    // disable cursor
+
+    //draw ui box
+    for (int i = 0; i <= COLUMNS; i++) {
+        move(1, i); //upper cover
+        addch('=');
+        move(ROWS - 1, i); //lower cover
+        addch('=');
+    }
+    for (int i = 2; i <= ROWS - 2; i++) {
+        move(i, 0); //left cover
+        addch('|');
+        move(i, COLUMNS); //right cover
+        addch('|');
+
+    }
+
+    //draw congratulation
+
+    move(6, COLUMNS / 2 - 7);
+    printw(" LEVEL CLEAR!!!");
+    move(9, COLUMNS / 2 - 4);
+    printw("LEVEL %d", level);
+    move(10, COLUMNS / 2 - 4);
+    printw("SCORE %d",score);
+
+
+    //draw input Section
+    for (int i = 0; i < COLUMNS - 5; i++) {
+        move(ROWS - 4, i + 3); //lower cover
+        addch('_');
+        move(3, i + 3); //upper cover
+        addch('_');
+    }
+
+    for (int i = 0; i < ROWS - 7; i++) {
+
+        move(i + 4, 3); //left cover
+        addch('|');
+        move(i + 4, COLUMNS - 3); //right cover
+        addch('|');
+    }
+
+    //draw Selects
+
+    move(14, COLUMNS / 2 - 5);
+    printw("1. CONTINUE");
+
+    move(17, COLUMNS / 2 - 5);
+    printw("2. SAVE");
 
     move(20, COLUMNS / 2 - 5);
     printw("3. EXIT");
@@ -737,6 +814,33 @@ void load_saved_game()
     return;
 }
 
+void save_your_level()
+{
+    int open_fd;
+    char * pathname = "../saves/your_save";
+    char * buf;
+    char * number;
+
+    open_fd = creat(pathname, 0644);
+    buf = (char*)calloc(200, sizeof(char));
+    number = (char*)calloc(20, sizeof(char));
+
+    strcat(buf, "LEVEL: ");
+    sprintf(number, "%d", level);
+    strcat(buf, number);
+    strcat(buf, "\nSCORE: ");
+    sprintf(number, "%d", score);
+    strcat(buf, number);
+    strcat(buf, "\n");
+
+    printf("%s", buf);
+
+    write(open_fd, buf, 200);
+
+    close(open_fd);
+
+    return;
+}
 
 //-------------------Test Functions----------------
 
