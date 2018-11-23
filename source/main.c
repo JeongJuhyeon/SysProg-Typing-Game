@@ -128,13 +128,15 @@ bool gameplay_loop() {
         // every 50 ms, check whether a letter was entered
         // Because we use non-blocking mode, it does not block until the user enters something.
         while ((input_letter = getch()) != ERR &&
-               strchr("\n\033abcdefghijklmnopqrstuvwxyz", input_letter) == NULL);
+               strchr("\177\n\033abcdefghijklmnopqrstuvwxyz", input_letter) == NULL);
 
         // handle input letter
         if (input_letter == ESC) {
             level_finished(0);
             return false;
-        } else if (input_letter != ERR) {
+        }
+		// if the user pressed BACKSPACE, delete one letter at the end of word [ in ' handle_input_letter' function ]
+		else if (input_letter != ERR) {
             handle_input_letter(input_word, input_letter);
         }
 
@@ -394,30 +396,52 @@ void handle_input_letter(char *input_word, char input_letter) {
     //if (DEBUG && input_letter != EOF) printf("Char entered: %c, input_letter: %d\n", input_letter, input_letter);
 
     switch (input_letter) {
-        case ENTER:
-            // complete input_word by adding 'NULL' to array   +   index reset
+
+	case BACKSPACE:
+
+		if (index <= 0)
+		{ // IF empty
+			;
+		}
+		else if (index > 0)
+		{ // '\0' can be in the last address
+			input_word[--index] = '\0';
+			// INPUT WORD REFRESH
+			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+			printw("                              "); // 30 space reset
+			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+			addstr(input_word);
+			refresh();
+		}
+
+		break; 
+	case ENTER:
+            // co1mplete input_word by adding 'NULL' to array   +   index reset
             input_word[index++] = '\0';
             index = 0;
             // finding and deleting word -> called from gameplay_loop because of score
             break;
 
-        default:
-            //	with each one letter, add to 'input_word'
-            if (index >= MAX_WORD_LENGTH - 2) { // IF comes to MAX LENGTH, no more input letter will be added
-            } else if (index < MAX_WORD_LENGTH - 1) { // '\0' can be in the last address
-                input_word[index++] = input_letter;
-                input_word[index] = '\0';
-                // INPUT WORD REFRESH
-                move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
-                printw("                              "); // 30 space reset
-                move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
-                addstr(input_word);
-                refresh();
-                //1118
-            }
-            break;
-    }
+	default:
+		//	with each one letter, add to 'input_word'
+		if (index >= MAX_WORD_LENGTH - 2) { // IF comes to MAX LENGTH, no more input letter will be added
+		}
+		else if (index < MAX_WORD_LENGTH - 1) { // '\0' can be in the last address
+			input_word[index++] = input_letter;
+			input_word[index] = '\0';
+			// INPUT WORD REFRESH
+			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+			printw("                              "); // 30 space reset
+			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+			addstr(input_word);
+			refresh();
+			//1118
+		}
+		break;
+	}
 }
+
+
 
 int handle_input_word(char *input_word) {
     if (DEBUG) printf("Input word: %s\n", input_word);

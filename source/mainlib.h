@@ -17,13 +17,13 @@
 #define FIELD_BOTTOM (ROWS - 10)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
-#define SPAWN_TIME 2
+#define SPAWN_TIME 4
 #define DROP_TIME 1
 #define ERASER "                                "
 #define LEVEL_TIME 60
 
 // for user input letter check
-typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
+typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
 enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', EXIT = '3'};
 enum level_clear_menu_choice { CONTINUE = '1', SAVE_GAME = '2'};
 
@@ -68,7 +68,6 @@ void handle_signal_50ms(int);
 // User input functions
 void handle_input_letter(char *, char);
 int handle_input_word(char *);
-void handle_esc();
 
 // TTY mode settings
 void set_cr_noecho_mode();
