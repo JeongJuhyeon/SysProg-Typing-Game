@@ -17,10 +17,10 @@
 #define FIELD_BOTTOM (ROWS - 10)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
-#define SPAWN_TIME 4
+#define SPAWN_TIME 2
 #define DROP_TIME 1
 #define ERASER "                                "
-#define LEVEL_TIME 60
+#define LEVEL_TIME 20
 
 // for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
@@ -60,7 +60,7 @@ void setup_level_clear_menu() ;
 // stages
 void splash_screen();
 char main_menu();
-char clear_menu();
+char level_clear_menu();
 bool gameplay_loop(void);
 
 // alarm, timer, update functions
@@ -99,4 +99,4 @@ void refresh_time(int seconds);
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
 void load_saved_game();
-void save_your_level();
+void save_game();

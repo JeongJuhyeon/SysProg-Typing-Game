@@ -52,25 +52,24 @@ int main() {
     splash_screen();
     while (true) {
         // After clearing a level
-        if (level_clear){
-            level_clear = 0;
-            menu_selection = clear_menu();
+        if (level_clear) {
+            menu_selection = level_clear_menu();
             if (menu_selection == EXIT) {
                 prepare_game_exit();
                 break;
             }
 
-            if (menu_selection == SAVE_GAME)
-            {
-                save_your_level();
-                level_clear = 1;
+            if (menu_selection == SAVE_GAME) {
+                save_game();
+                level_clear = true;
                 continue;
             }
-
-            setup_gameplay_stage();
-            level_clear = gameplay_loop();
+            else {
+                setup_gameplay_stage();
+                level_clear = gameplay_loop();
+            }
         }
-        // Starting the game
+            // Starting the game
         else {
             menu_selection = main_menu();
             if (menu_selection == EXIT) {
@@ -89,31 +88,29 @@ int main() {
             level_clear = gameplay_loop();
         }
     }
-    
+
     return 0;
 }
 
-char main_menu(){
+char main_menu() {
     char input_letter;
 
     setup_main_menu();
-
-    while((input_letter = getch())!=ERR && strchr("123", input_letter)==NULL);
+    while ((input_letter = getch()) != ERR && strchr("123", input_letter) == NULL);
 
     return input_letter;
 }
 
-char clear_menu(){
+char level_clear_menu() {
     char input_letter;
 
     setup_level_clear_menu();
-
-    while((input_letter = getch())!=ERR && strchr("123", input_letter)==NULL);
+    while ((input_letter = getch()) != ERR && strchr("123", input_letter) == NULL);
 
     return input_letter;
 }
 
-void splash_screen(){
+void splash_screen() {
     initscr();
     draw_splash_screen();
     getch(); // wait for key press during splash screen
@@ -150,8 +147,8 @@ bool gameplay_loop() {
             level_finished(0);
             return false;
         }
-		// if the user pressed BACKSPACE, delete one letter at the end of word [ in ' handle_input_letter' function ]
-		else if (input_letter != ERR) {
+            // if the user pressed BACKSPACE, delete one letter at the end of word [ in ' handle_input_letter' function ]
+        else if (input_letter != ERR) {
             handle_input_letter(input_word, input_letter);
         }
 
@@ -299,7 +296,7 @@ void setup_level_clear_menu() {
     move(9, COLUMNS / 2 - 4);
     printw("LEVEL %d", level);
     move(10, COLUMNS / 2 - 4);
-    printw("SCORE %d",score);
+    printw("SCORE %d", score);
 
 
     //draw input Section
@@ -380,13 +377,13 @@ void handle_signal_50ms(int signum) {
     }
 
     // spawn a new word
-    if (updates_done % (int) UPDATES_PER_SECOND * SPAWN_TIME == 0) {
+    if (updates_done % ((int) (UPDATES_PER_SECOND * SPAWN_TIME)) == 1) {
         spawn_word(word_list_global_ptr);
     }
 
     if (updates_done >= (int) UPDATES_PER_SECOND * LEVEL_TIME) {
         level_clear_flag = true;
-		updates_done = 0;
+        updates_done = 0;
     }
 
     return;
@@ -474,50 +471,45 @@ void handle_input_letter(char *input_word, char input_letter) {
 
     switch (input_letter) {
 
-	case BACKSPACE:
+        case BACKSPACE:
 
-		if (index <= 0)
-		{ // IF empty
-			;
-		}
-		else if (index > 0)
-		{ // '\0' can be in the last address
-			input_word[--index] = '\0';
-			// INPUT WORD REFRESH
-			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
-			printw("                              "); // 30 space reset
-			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
-			addstr(input_word);
-			refresh();
-		}
+            if (index <= 0) { // IF empty
+                ;
+            } else if (index > 0) { // '\0' can be in the last address
+                input_word[--index] = '\0';
+                // INPUT WORD REFRESH
+                move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+                printw("                              "); // 30 space reset
+                move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+                addstr(input_word);
+                refresh();
+            }
 
-		break; 
-	case ENTER:
+            break;
+        case ENTER:
             // co1mplete input_word by adding 'NULL' to array   +   index reset
             input_word[index++] = '\0';
             index = 0;
             // finding and deleting word -> called from gameplay_loop because of score
             break;
 
-	default:
-		//	with each one letter, add to 'input_word'
-		if (index >= MAX_WORD_LENGTH - 2) { // IF comes to MAX LENGTH, no more input letter will be added
-		}
-		else if (index < MAX_WORD_LENGTH - 1) { // '\0' can be in the last address
-			input_word[index++] = input_letter;
-			input_word[index] = '\0';
-			// INPUT WORD REFRESH
-			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
-			printw("                              "); // 30 space reset
-			move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
-			addstr(input_word);
-			refresh();
-			//1118
-		}
-		break;
-	}
+        default:
+            //	with each one letter, add to 'input_word'
+            if (index >= MAX_WORD_LENGTH - 2) { // IF comes to MAX LENGTH, no more input letter will be added
+            } else if (index < MAX_WORD_LENGTH - 1) { // '\0' can be in the last address
+                input_word[index++] = input_letter;
+                input_word[index] = '\0';
+                // INPUT WORD REFRESH
+                move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+                printw("                              "); // 30 space reset
+                move(ROWS - 6 + 1, (COLUMNS - MAX_WORD_LENGTH) / 2);
+                addstr(input_word);
+                refresh();
+                //1118
+            }
+            break;
+    }
 }
-
 
 
 int handle_input_word(char *input_word) {
@@ -789,17 +781,15 @@ void draw_new_falling_word(falling_word *new_word) {
     refresh();
 }
 
-void load_saved_game()
-{
-    FILE * open_fd;
-    char * pathname = "../saves/your_save";
+void load_saved_game() {
+    FILE *open_fd;
+    char *pathname = "../saves/save1";
     int number;
     char temp[200];
 
     open_fd = fopen(pathname, "r");
 
-    if(!open_fd)
-    {
+    if (!open_fd) {
         printf("There is no file\n");
         return;
     }
@@ -814,16 +804,15 @@ void load_saved_game()
     return;
 }
 
-void save_your_level()
-{
+void save_game() {
     int open_fd;
-    char * pathname = "../saves/your_save";
-    char * buf;
-    char * number;
+    char *pathname = "../saves/save1";
+    char *buf;
+    char *number;
 
     open_fd = creat(pathname, 0644);
-    buf = (char*)calloc(200, sizeof(char));
-    number = (char*)calloc(20, sizeof(char));
+    buf = (char *) calloc(200, sizeof(char));
+    number = (char *) calloc(20, sizeof(char));
 
     strcat(buf, "LEVEL: ");
     sprintf(number, "%d", level);
