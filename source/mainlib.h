@@ -17,13 +17,13 @@
 #define FIELD_BOTTOM (ROWS - 10)
 #define COLUMNS 50
 #define UPDATES_PER_SECOND 20
-#define SPAWN_TIME 2
+#define SPAWN_TIME 4
 #define DROP_TIME 1
 #define ERASER "                                "
 #define LEVEL_TIME 60
 
 // for user input letter check
-typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27 } USR_INPUT_ASCII;
+typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
 
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
@@ -62,7 +62,6 @@ void handle_signal_50ms(int);
 // User input functions
 void handle_input_letter(char *, char);
 int handle_input_word(char *);
-void handle_esc();
 
 // TTY mode settings
 void set_cr_noecho_mode();
