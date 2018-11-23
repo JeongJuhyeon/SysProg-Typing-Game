@@ -702,8 +702,11 @@ void draw_game_hud() {
 
     // draw time
 
-    move(ROWS - 2, COLUMNS / 2 - 3); //lives
+    move(ROWS - 2, COLUMNS / 2 - 3);
     printw("TIME: %d", LEVEL_TIME);
+
+    move(ROWS - 8, COLUMNS / 2 - 4); //draw level
+    printw("LEVEL: %d", level);
 
     //draw input Section
     for (int i = 0; i < MAX_WORD_LENGTH; i++) {
