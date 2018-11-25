@@ -53,6 +53,7 @@ int main() {
     while (true) {
         // After clearing a level
         if (level_clear) {
+
             menu_selection = level_clear_menu();
             if (menu_selection == EXIT) {
                 prepare_game_exit();
@@ -131,6 +132,9 @@ bool gameplay_loop() {
         if (level_clear_flag) {
             level_finished(1);
             level_clear_flag = false;
+
+			input_word[0] = '\0';
+
             return true;
         }
 
@@ -157,8 +161,7 @@ bool gameplay_loop() {
             score += handle_input_word(input_word);
             refresh_score_clear_input_box(score);
 
-            for (int i = 0; i < MAX_WORD_LENGTH; i++)
-                input_word[i] = '\0';
+            input_word[0] = '\0';
         }
 
         if (lives_lost > 0) {
