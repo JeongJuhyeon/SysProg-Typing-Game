@@ -134,6 +134,7 @@ bool gameplay_loop() {
     char input_letter;
 
     level_clear_flag = false;
+	handle_signal_50ms(START_LEVEL_SIGNAL);
 
     while (1) {
         pause();      // wait for a signal (SIGALRM)
@@ -381,9 +382,9 @@ void handle_signal_50ms(int signum) {
 
     // drop the words
     if (updates_done % (int) UPDATES_PER_SECOND * (BASE_DROP_TIME / (1.0 + level / 7.0)) == 0) {
-        lives_lost = check_words_bottom();
         erase_all_falling_words();
         drop_words_position();
+        lives_lost = check_words_bottom();
         draw_all_falling_words();
     }
 
@@ -401,6 +402,9 @@ void handle_signal_50ms(int signum) {
         level_clear_flag = true;
         updates_done = 0;
     }
+
+	if (signum == START_LEVEL_SIGNAL)
+		updates_done = 0;
 
     return;
 }
@@ -471,7 +475,7 @@ int check_words_bottom() {
 
     while (word) {
         next_word = word->next; // do this first because we might delete the current word
-        if (word->y >= FIELD_BOTTOM) {
+        if (word->y > FIELD_BOTTOM) {
             words_at_bottom++;
             delete_falling_word(word);
             if (word->effect == BOMB)
@@ -590,7 +594,8 @@ void tty_mode(int how) {
 
 // Delete a node from the linked list
 int delete_falling_word(falling_word *word_to_delete) {
-    erase_falling_word(word_to_delete);
+    if (word_to_delete->y <= FIELD_BOTTOM)
+		erase_falling_word(word_to_delete);
     //if (DEBUG) printf("Deleting %s.\nPrev: %p.\nNext: %p.\n Head is %p.\n", word_to_delete->word, word_to_delete->prev, word_to_delete->next, head);
 
 
@@ -708,7 +713,7 @@ void draw_splash_screen() {
 void draw_game_hud() {
     //draw ui box
     for (int i = 0; i <= COLUMNS; i++) {
-        move(ROWS - 9, i); //upper cover
+        move(FIELD_BOTTOM + 1, i); //upper cover
         addch('=');
         move(ROWS - 1, i); //lower cover
         addch('=');
@@ -822,7 +827,7 @@ void draw_new_falling_word(falling_word *new_word) {
     addstr(new_word->word);
     attroff(COLOR_PAIR(new_word->effect));
     attroff(A_BOLD);
-
+    
     refresh();
 }
 

@@ -21,6 +21,7 @@
 #define BASE_DROP_TIME 2
 #define ERASER "                                "
 #define LEVEL_TIME 45
+#define START_LEVEL_SIGNAL 666
 
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
 enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', EXIT = '3'};
