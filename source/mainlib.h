@@ -20,7 +20,7 @@
 #define BASE_SPAWN_TIME 3
 #define BASE_DROP_TIME 2
 #define ERASER "                                "
-#define LEVEL_TIME 45
+#define LEVEL_TIME 3
 #define START_LEVEL_SIGNAL 666
 
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
@@ -95,6 +95,7 @@ void draw_splash_screen();
 void refresh_score_clear_input_box();
 void refresh_lives();
 void refresh_time(int seconds);
+void save_file_screen();
 
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);

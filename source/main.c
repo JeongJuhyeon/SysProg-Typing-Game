@@ -8,6 +8,7 @@
 #include <curses.h>                         // Curses
 #include <stdbool.h>
 #include <string.h>
+#include <sys/stat.h>
 
 // #include "minunit_3line.h"               // for unit testing
 #include "minunit.h"                        // for slightly more convenient unit testing
@@ -65,11 +66,10 @@ int main() {
         if (level_clear) {
             menu_selection = level_clear_menu();
             if (menu_selection == EXIT) {
-                prepare_game_exit();
-                break;
+                level_clear = false;
             }
 
-            if (menu_selection == SAVE_GAME) {
+            else if (menu_selection == SAVE_GAME) {
                 save_game();
             }
             else {             // CONTINUE
@@ -833,9 +833,26 @@ void draw_new_falling_word(falling_word *new_word) {
 
 void load_saved_game() {
     FILE *open_fd;
-    char *pathname = "../saves/save1";
+    char pathname[15];
     int number;
     char temp[200];
+    char slot = 0;
+
+    save_file_screen();
+
+    switch(slot = getch())
+    {
+        case '1':
+            strcpy(pathname, "../saves/save1");
+            break;
+        case '2':
+            strcpy(pathname, "../saves/save2");
+            break;
+        case '3':
+            strcpy(pathname, "../saves/save3");
+            break;
+
+    }
 
     open_fd = fopen(pathname, "r");
 
@@ -856,9 +873,26 @@ void load_saved_game() {
 
 void save_game() {
     int open_fd;
-    char *pathname = "../saves/save1";
+    char pathname[15];
     char *buf;
     char *number;
+    char slot = 0;
+
+    save_file_screen();
+
+    switch(slot = getch())
+    {
+        case '1':
+            strcpy(pathname, "../saves/save1");
+            break;
+        case '2':
+            strcpy(pathname, "../saves/save2");
+            break;
+        case '3':
+            strcpy(pathname, "../saves/save3");
+            break;
+
+    }
 
     open_fd = creat(pathname, 0644);
     buf = (char *) calloc(200, sizeof(char));
@@ -878,6 +912,151 @@ void save_game() {
 
     close(open_fd);
 
+    return;
+}
+
+void save_file_screen()
+{
+    FILE * save_file;
+    int level, score;
+    char temp[10];
+
+    struct stat stat_buf;
+    bool save_file_exists;
+
+    clear();
+
+    //draw ui box
+    for (int i = 0; i <= COLUMNS; i++) {
+        move(1, i); //upper cover
+        addch('=');
+        move(ROWS - 1, i); //lower cover
+        addch('=');
+    }
+    for (int i = 2; i <= ROWS - 2; i++) {
+        move(i, 0); //left cover
+        addch('|');
+        move(i, COLUMNS); //right cover
+        addch('|');
+
+    }
+
+    for (int i = 8; i <= COLUMNS - 8; i++) {
+        move(5, i); //upper cover of slot 1
+        addch('_');
+        move(10, i); //lower cover of slot 1
+        addch('_');
+
+        move(11, i); //upper cover of slot 2
+        addch('_');
+        move(16, i); //lower cover of slot 2
+        addch('_');
+
+        move(17, i); //upper cover of slot 3
+        addch('_');
+        move(22, i); //lower cover of slot 3
+        addch('_');
+    }
+
+    for (int i = 0; i <= 4; i++) {
+        move(i + 6, 8); //left cover
+        addch('|');
+        move(i + 6, COLUMNS-8); //right cover
+        addch('|');
+
+        move(i + 12, 8); //left cover
+        addch('|');
+        move(i + 12, COLUMNS-8); //right cover
+        addch('|');
+
+        move(i + 18, 8); //left cover
+        addch('|');
+        move(i + 18, COLUMNS-8); //right cover
+        addch('|');
+    }
+
+    move(3, COLUMNS/2-5);
+    printw("Choose Slot");
+
+    //draw slot name
+    move(8, 3);
+    printw("(1)");
+    move(14, 3);
+    printw("(2)");
+    move(20, 3);
+    printw("(3)");
+
+    if(save_file_exists = stat("../saves/save1", &stat_buf) == 0 ? true : false)
+    {
+        save_file = fopen("../saves/save1", "r");
+
+        fscanf(save_file, "%s %d", temp, &level);
+        fscanf(save_file, "%s %d", temp, &score);
+
+        move(6, 10);
+        printw("Save 1");
+
+        move(8, 10);
+        printw("LEVEL: %d", level);
+
+        move(9, 10);
+        printw("SCORE: %d", score);
+
+    }
+    else
+    {
+        move(8, COLUMNS/2-3);
+        printw("EMPTY SLOT");
+    }
+
+    if(save_file_exists = stat("../saves/save2", &stat_buf) == 0 ? true : false)
+    {
+        save_file = fopen("../saves/save2", "r");
+
+        fscanf(save_file, "%s %d", temp, &level);
+        fscanf(save_file, "%s %d", temp, &score);
+
+        move(12, 10);
+        printw("Save 2");
+
+        move(14, 10);
+        printw("LEVEL: %d", level);
+
+        move(15, 10);
+        printw("SCORE: %d", score);
+
+    }
+    else
+    {
+        move(14, COLUMNS/2-3);
+        printw("EMPTY SLOT");
+    }
+
+    if(save_file_exists = stat("../saves/save3", &stat_buf) == 0 ? true : false)
+    {
+        save_file = fopen("../saves/save3", "r");
+
+        fscanf(save_file, "%s %d", temp, &level);
+        fscanf(save_file, "%s %d", temp, &score);
+
+        move(18, 10);
+        printw("Save 3");
+
+        move(20, 10);
+        printw("LEVEL: %d", level);
+
+        move(21, 10);
+        printw("SCORE: %d", score);
+
+    }
+    else
+    {
+        move(20, COLUMNS/2-3);
+        printw("EMPTY SLOT");
+    }
+
+
+    refresh();
     return;
 }
 
