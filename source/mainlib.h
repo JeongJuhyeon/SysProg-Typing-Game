@@ -10,7 +10,7 @@
 //--------#define numbers/settings----------
 
 #define MAX_WORD_LENGTH 30
-#define LIVES_AT_START    6
+#define LIVES_AT_START    3
 #define DEBUG            0
 #define WORD_LIST_SIZE 5000
 #define ROWS 25
@@ -25,7 +25,7 @@
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
 enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', EXIT = '3'};
 enum level_clear_menu_choice { CONTINUE = '1', SAVE_GAME = '2'};
-typedef enum { NORMAL, BOMB, DROPS_FAST, EXTRA_LIFE} word_effect;
+typedef enum { NORMAL = 0, BOMB, DROPS_FAST, EXTRA_LIFE} word_effect;
 
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
@@ -73,9 +73,6 @@ void handle_input_letter(char *, char);
 int handle_input_word(char *);
 
 // TTY mode settings
-void set_cr_noecho_mode();
-void set_nodelay_mode();
-void tty_mode(int how);
 
 
 // test functions
@@ -88,6 +85,7 @@ static void test_draw_falling_words();
 
 // graphics functions
 
+void setup_colors();
 void erase_all_falling_words();
 void erase_falling_word(falling_word *word_to_erase);
 void draw_all_falling_words();

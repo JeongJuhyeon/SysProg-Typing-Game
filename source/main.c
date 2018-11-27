@@ -49,12 +49,10 @@ int main() {
     char menu_selection;
     bool level_clear = false;
 
+    initscr();
+    setup_colors();
     splash_screen();
 
-    // color pairs
-    start_color();
-    init_pair(NORMAL, COLOR_WHITE, COLOR_BLACK);
-    init_pair(BOMB, COLOR_RED, COLOR_BLACK);
 
     if (has_colors() == false) {
         endwin();
@@ -121,7 +119,6 @@ char level_clear_menu() {
 }
 
 void splash_screen() {
-    initscr();
     draw_splash_screen();
     getch(); // wait for key press during splash screen
 }
@@ -175,7 +172,7 @@ bool gameplay_loop() {
             input_word[0] = '\0';
         }
 
-        if (lives_lost > 0) {
+        if (lives_lost != 0) {
             remaining_lives -= lives_lost;
             refresh_lives(remaining_lives);
             lives_lost = 0;
@@ -193,6 +190,13 @@ bool gameplay_loop() {
 
 
 //-------------Stage setup/cleanup functions-----------
+
+void setup_colors(){
+    start_color();
+    init_pair(BOMB, COLOR_RED, COLOR_BLACK);
+    init_pair(DROPS_FAST, COLOR_CYAN, COLOR_BLACK);
+    init_pair(EXTRA_LIFE, COLOR_GREEN, COLOR_BLACK);
+}
 
 void setup_gameplay_stage() {
     cbreak();       // Disables line buffering
@@ -454,6 +458,8 @@ void drop_words_position() {
     while (temp) {
         //if (DEBUG) printf("Temp: %p, Word: %s, Y: %d, Next: %p\n",temp, temp->word, temp->y, temp->next);
         temp->y += 1;
+        if (temp->effect == DROPS_FAST)
+            temp->y += 1;
         temp = temp->next;
     }
 }
@@ -465,7 +471,7 @@ int check_words_bottom() {
 
     while (word) {
         next_word = word->next; // do this first because we might delete the current word
-        if (word->y == FIELD_BOTTOM) {
+        if (word->y >= FIELD_BOTTOM) {
             words_at_bottom++;
             delete_falling_word(word);
             if (word->effect == BOMB)
@@ -535,6 +541,8 @@ int handle_input_word(char *input_word) {
 
     // if the word is found, delete it and return points
     if (searched_pointer) {
+        if (searched_pointer->effect == EXTRA_LIFE)
+            lives_lost -= 1;
         delete_falling_word(searched_pointer);
         return returnScore;
     }
@@ -640,9 +648,15 @@ falling_word *create_falling_word(char word[], int x, int y) {
     new_falling_word->x = x;
     new_falling_word->y = y;
 
-    switch (rand() % 10){
-        case 0:
+    switch (rand() % 15){
+        case BOMB:
             new_falling_word->effect = BOMB;
+            break;
+        case EXTRA_LIFE:
+            new_falling_word->effect = EXTRA_LIFE;
+            break;
+        case DROPS_FAST:
+            new_falling_word->effect = DROPS_FAST;
             break;
         default:
             new_falling_word->effect = NORMAL;
@@ -790,21 +804,24 @@ void erase_falling_word(falling_word *word_to_erase) {
 }
 
 void draw_all_falling_words() {
+    attron(A_BOLD);
     for (falling_word *cur = head; cur != NULL; cur = cur->next) {
         move(cur->y, cur->x);
         attron(COLOR_PAIR(cur->effect));
         addstr(cur->word);
         attroff(COLOR_PAIR(cur->effect));
     }
-
+    attroff(A_BOLD);
     refresh();
 }
 
 void draw_new_falling_word(falling_word *new_word) {
+    attron(A_BOLD);
     move(new_word->y, new_word->x);
     attron(COLOR_PAIR(new_word->effect));
     addstr(new_word->word);
     attroff(COLOR_PAIR(new_word->effect));
+    attroff(A_BOLD);
 
     refresh();
 }
