@@ -130,10 +130,10 @@ bool gameplay_loop() {
     while (1) {
         pause();      // wait for a signal (SIGALRM)
         if (level_clear_flag) {
+            handle_input_letter(input_word, ENTER);
+
             level_finished(1);
             level_clear_flag = false;
-
-			input_word[0] = '\0';
 
             return true;
         }
@@ -365,7 +365,7 @@ void handle_signal_50ms(int signum) {
     updates_done++;
 
     // drop the words
-    if (updates_done % (int) UPDATES_PER_SECOND * DROP_TIME == 0) {
+    if (updates_done % (int) UPDATES_PER_SECOND * (BASE_DROP_TIME / (1.0 + level / 7.0)) == 0) {
         lives_lost = check_words_bottom();
         erase_all_falling_words();
         drop_words_position();
@@ -373,16 +373,16 @@ void handle_signal_50ms(int signum) {
     }
 
     // every second refresh time displayed
-    if (updates_done % (int) UPDATES_PER_SECOND == 0) {
+    if (updates_done % UPDATES_PER_SECOND == 0) {
         refresh_time(LEVEL_TIME - updates_done / UPDATES_PER_SECOND);
     }
 
     // spawn a new word
-    if (updates_done % ((int) (UPDATES_PER_SECOND * SPAWN_TIME)) == 1) {
+    if (updates_done % (int) (UPDATES_PER_SECOND * (BASE_SPAWN_TIME / (1.0 + level / 12.0))) == 1) {
         spawn_word(word_list_global_ptr);
     }
 
-    if (updates_done >= (int) UPDATES_PER_SECOND * LEVEL_TIME) {
+    if (updates_done >= (int) (UPDATES_PER_SECOND * LEVEL_TIME)) {
         level_clear_flag = true;
         updates_done = 0;
     }
@@ -514,7 +514,7 @@ void handle_input_letter(char *input_word, char input_letter) {
 int handle_input_word(char *input_word) {
     if (DEBUG) printf("Input word: %s\n", input_word);
 
-    int returnScore = strlen(input_word) * 10; // score of a word -> ? just 1 ?
+    int returnScore = strlen(input_word) * 10;
     falling_word *searched_pointer = NULL;
     searched_pointer = find_falling_word(input_word);    // search the word
 
@@ -696,7 +696,7 @@ void draw_game_hud() {
     move(ROWS - 2, COLUMNS / 2 - 3);
     printw("TIME: %d", LEVEL_TIME);
 
-    move(ROWS - 8, COLUMNS / 2 - 4); //draw level
+    move(ROWS - 8, COLUMNS / 2 - 3); //draw level
     printw("LEVEL: %d", level);
 
     //draw input Section
@@ -740,7 +740,7 @@ void refresh_lives(int remaining_lives) {
 }
 
 void refresh_time(int seconds) {
-    move(ROWS - 2, COLUMNS / 2 + 3); //lives
+    move(ROWS - 2, COLUMNS / 2 + 3);
     printw("%2d", seconds);
     refresh();
 }

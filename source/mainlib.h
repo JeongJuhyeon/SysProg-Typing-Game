@@ -15,12 +15,12 @@
 #define WORD_LIST_SIZE 5000
 #define ROWS 25
 #define FIELD_BOTTOM (ROWS - 10)
-#define COLUMNS 50
+#define COLUMNS 60
 #define UPDATES_PER_SECOND 20
-#define SPAWN_TIME 2
-#define DROP_TIME 1
+#define BASE_SPAWN_TIME 3
+#define BASE_DROP_TIME 2
 #define ERASER "                                "
-#define LEVEL_TIME 20
+#define LEVEL_TIME 45
 
 // for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
