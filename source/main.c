@@ -50,10 +50,21 @@ int main() {
     bool level_clear = false;
 
     splash_screen();
+
+    // color pairs
+    start_color();
+    init_pair(NORMAL, COLOR_WHITE, COLOR_BLACK);
+    init_pair(BOMB, COLOR_RED, COLOR_BLACK);
+
+    if (has_colors() == false) {
+        endwin();
+        printf("Your terminal does not support color\n");
+        exit(1);
+    }
+
     while (true) {
         // After clearing a level
         if (level_clear) {
-
             menu_selection = level_clear_menu();
             if (menu_selection == EXIT) {
                 prepare_game_exit();
@@ -68,7 +79,7 @@ int main() {
                 level_clear = gameplay_loop();
             }
         }
-            // Starting the game
+        // Starting the game
         else {
             menu_selection = main_menu();
             if (menu_selection == EXIT) {
@@ -78,7 +89,7 @@ int main() {
 
             if (menu_selection == LOAD_GAME)
                 load_saved_game();
-            else {                              // NEW GAME
+            else {             // NEW GAME
                 level = 1;
                 score = 0;
             }
@@ -457,6 +468,8 @@ int check_words_bottom() {
         if (word->y == FIELD_BOTTOM) {
             words_at_bottom++;
             delete_falling_word(word);
+            if (word->effect == BOMB)
+                words_at_bottom = 999999;
         }
         word = next_word; //go to the next word
     }
@@ -626,6 +639,15 @@ falling_word *create_falling_word(char word[], int x, int y) {
     strncpy(new_falling_word->word, word, MAX_WORD_LENGTH);
     new_falling_word->x = x;
     new_falling_word->y = y;
+
+    switch (rand() % 10){
+        case 0:
+            new_falling_word->effect = BOMB;
+            break;
+        default:
+            new_falling_word->effect = NORMAL;
+    }
+
     return new_falling_word;
 }
 
@@ -770,7 +792,9 @@ void erase_falling_word(falling_word *word_to_erase) {
 void draw_all_falling_words() {
     for (falling_word *cur = head; cur != NULL; cur = cur->next) {
         move(cur->y, cur->x);
+        attron(COLOR_PAIR(cur->effect));
         addstr(cur->word);
+        attroff(COLOR_PAIR(cur->effect));
     }
 
     refresh();
@@ -778,7 +802,9 @@ void draw_all_falling_words() {
 
 void draw_new_falling_word(falling_word *new_word) {
     move(new_word->y, new_word->x);
+    attron(COLOR_PAIR(new_word->effect));
     addstr(new_word->word);
+    attroff(COLOR_PAIR(new_word->effect));
 
     refresh();
 }

@@ -22,10 +22,10 @@
 #define ERASER "                                "
 #define LEVEL_TIME 45
 
-// for user input letter check
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
 enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', EXIT = '3'};
 enum level_clear_menu_choice { CONTINUE = '1', SAVE_GAME = '2'};
+typedef enum { NORMAL, BOMB, DROPS_FAST, EXTRA_LIFE} word_effect;
 
 typedef struct falling_word {
     char word[MAX_WORD_LENGTH];
@@ -33,6 +33,7 @@ typedef struct falling_word {
     struct falling_word *prev;
     int x;
     int y;
+    word_effect effect;
 } falling_word;
 
 //---------function declarations------------
