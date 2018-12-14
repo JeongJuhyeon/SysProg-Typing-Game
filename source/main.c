@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 // #include "minunit_3line.h"               // for unit testing
 #include "minunit.h"                        // for slightly more convenient unit testing
@@ -61,6 +62,8 @@ int main() {
         exit(1);
     }
 
+    signal(SIGINT, handle_interrupts);
+
     while (true) {
         // After clearing a level
         if (level_clear) {
@@ -70,6 +73,7 @@ int main() {
             }
 
             else if (menu_selection == SAVE_GAME) {
+                save_file_screen();
                 save_game();
             }
             else {             // CONTINUE
@@ -381,7 +385,7 @@ void handle_signal_50ms(int signum) {
     updates_done++;
 
     // drop the words
-    if (updates_done % (int) UPDATES_PER_SECOND * (BASE_DROP_TIME / (1.0 + level / 7.0)) == 0) {
+    if (updates_done % (int) UPDATES_PER_SECOND * (BASE_DROP_TIME / (1.0 + level / 6.5)) == 0) {
         erase_all_falling_words();
         drop_words_position();
         lives_lost = check_words_bottom();
@@ -394,7 +398,7 @@ void handle_signal_50ms(int signum) {
     }
 
     // spawn a new word
-    if (updates_done % (int) (UPDATES_PER_SECOND * (BASE_SPAWN_TIME / (1.0 + level / 12.0))) == 1) {
+    if (updates_done % (int) (UPDATES_PER_SECOND * (BASE_SPAWN_TIME / (1.0 + level / 10.5))) == 1) {
         spawn_word(word_list_global_ptr);
     }
 
@@ -444,16 +448,27 @@ int load_words(char *file_name, char **word_list, int list_size) {
 
 // Spawns a new word
 void spawn_word(char *word_list[]) {
+    static int prev_start_x = COLUMNS + 10;
+    static int prev_end_x = COLUMNS + 12;
+
     char new_word[MAX_WORD_LENGTH];
     // Pick a random word from the list and copy it into new_word
     strncpy(new_word, word_list[rand() % WORD_LIST_SIZE], MAX_WORD_LENGTH);
     // Pick a random x coordinate
     int x = rand() % (COLUMNS - strlen(new_word) - 1);
+    // if it overlaps with the previous word, pick a new x coordinate
+    while (x <= prev_end_x + 1 && x + strlen(new_word) - 1 >= prev_start_x - 1)
+        x = rand() % (COLUMNS - strlen(new_word) - 1);
+
+    prev_start_x = x;
+    prev_end_x = x + strlen(new_word) - 1;
+
     // Create and add the word
     falling_word *new_falling_word = create_falling_word(new_word, x, 0);
     add_falling_word(new_falling_word);
     draw_new_falling_word(new_falling_word);
     // if (DEBUG) printf("New word: %s\n", new_word);
+
 }
 
 void drop_words_position() {
@@ -509,7 +524,7 @@ void handle_input_letter(char *input_word, char input_letter) {
 
             break;
         case ENTER:
-            // co1mplete input_word by adding 'NULL' to array   +   index reset
+            // complete input_word by adding 'NULL' to array   +   index reset
             input_word[index++] = '\0';
             index = 0;
             // finding and deleting word -> called from gameplay_loop because of score
@@ -871,6 +886,18 @@ void load_saved_game() {
     return;
 }
 
+void handle_signal_child(int signum){
+    // parent should wait and set to stop ignoring ctrl+c
+    wait(NULL);
+    signal(SIGINT, handle_interrupts);
+    signal(SIGCHLD, SIG_DFL);
+}
+
+void handle_interrupts(int signum){
+    prepare_game_exit();
+    exit(1);
+}
+
 void save_game() {
     int open_fd;
     char pathname[15];
@@ -878,9 +905,23 @@ void save_game() {
     char *number;
     char slot = 0;
 
-    save_file_screen();
+    while ((slot = getch()) != ERR && strchr("123", slot) == NULL);
+    // received 1, 2, or 3 save slot
+    // parent needs to be setup to handle dying child, ignore ctrl+c
+    signal(SIGCHLD, handle_signal_child);
+    signal(SIGINT, SIG_IGN);
 
-    switch(slot = getch())
+    // fork
+    int is_parent = fork();
+
+    // parent is done, return to level menu
+    if (is_parent)
+        return;
+
+    // forked child should ignored alarms
+    signal(SIGALRM, SIG_IGN);
+
+    switch(slot)
     {
         case '1':
             strcpy(pathname, "../saves/save1");
@@ -891,7 +932,6 @@ void save_game() {
         case '3':
             strcpy(pathname, "../saves/save3");
             break;
-
     }
 
     open_fd = creat(pathname, 0644);
@@ -911,6 +951,8 @@ void save_game() {
     write(open_fd, buf, 200);
 
     close(open_fd);
+
+    exit(0);
 
     return;
 }

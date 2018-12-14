@@ -15,12 +15,12 @@
 #define WORD_LIST_SIZE 5000
 #define ROWS 25
 #define FIELD_BOTTOM (ROWS - 10)
-#define COLUMNS 60
+#define COLUMNS 70
 #define UPDATES_PER_SECOND 20
 #define BASE_SPAWN_TIME 3
 #define BASE_DROP_TIME 2
 #define ERASER "                                "
-#define LEVEL_TIME 3
+#define LEVEL_TIME 10
 #define START_LEVEL_SIGNAL 666
 
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
@@ -68,6 +68,8 @@ bool gameplay_loop(void);
 // alarm, timer, update functions
 void set_50ms_timer(void);
 void handle_signal_50ms(int);
+void handle_signal_child(int);
+void handle_interrupts(int);
 
 // User input functions
 void handle_input_letter(char *, char);
