@@ -26,6 +26,7 @@ int lives_lost = 0;                                     // can't update this whe
 bool level_clear_flag = false;
 int level = 1;                                          // can't send this as parameter to signal handler
 int score = 0;
+int remaining_lives = LIVES_AT_START;
 char **word_list_global_ptr = NULL;                     // can't send this as parameter to signal handler
 
 
@@ -48,7 +49,7 @@ int main() {
     MU_RUN_SUITE(linked_list_tests); // Run the linked_list_tests test suite
     MU_REPORT(); // Report the results
 
-    char menu_selection;
+    char menu_selection, temp;
     bool level_clear = false;
 
     initscr();
@@ -68,7 +69,7 @@ int main() {
         // After clearing a level
         if (level_clear) {
             menu_selection = level_clear_menu();
-            if (menu_selection == EXIT) {
+            if (menu_selection == GO_TO_MAIN) {
                 level_clear = false;
             }
 
@@ -88,8 +89,13 @@ int main() {
                 prepare_game_exit();
                 break;
             }
-
-            if (menu_selection == LOAD_GAME)
+            else if(menu_selection == HOW_TO_PLAY)
+            {
+                How_to_play_screen();
+                temp = getch();
+                continue;
+            }
+            else if (menu_selection == LOAD_GAME)
                 load_saved_game();
             else {             // NEW GAME
                 level = 1;
@@ -108,7 +114,7 @@ char main_menu() {
     char input_letter;
 
     setup_main_menu();
-    while ((input_letter = getch()) != ERR && strchr("123", input_letter) == NULL);
+    while ((input_letter = getch()) != ERR && strchr("1234", input_letter) == NULL);
 
     return input_letter;
 }
@@ -132,7 +138,7 @@ void splash_screen() {
 bool gameplay_loop() {
     char *word_list[WORD_LIST_SIZE];
     load_words("../resources/words_5000", word_list, WORD_LIST_SIZE);
-    int remaining_lives = LIVES_AT_START;
+
 
     char input_word[MAX_WORD_LENGTH];
     char input_letter;
@@ -274,14 +280,17 @@ void setup_main_menu() {
 
     //draw Selects
 
-    move(14, COLUMNS / 2 - 5);
+    move(11, COLUMNS / 2 - 5);
     printw("1. NEW GAME");
 
-    move(17, COLUMNS / 2 - 5);
+    move(14, COLUMNS / 2 - 5);
     printw("2. CONTINUE");
 
+    move(17, COLUMNS / 2 - 5);
+    printw("3. HOW TO PLAY");
+
     move(20, COLUMNS / 2 - 5);
-    printw("3. EXIT");
+    printw("4. EXIT");
 
 
     return;
@@ -318,6 +327,8 @@ void setup_level_clear_menu() {
     printw("LEVEL %d", level);
     move(10, COLUMNS / 2 - 4);
     printw("SCORE %d", score);
+    move(11, COLUMNS / 2 - 4);
+    printw("LIVES %d", remaining_lives);
 
 
     //draw input Section
@@ -743,7 +754,7 @@ void draw_game_hud() {
 
     //draw LIVES and SCORE
     move(ROWS - 2, COLUMNS / 2 - COLUMNS / 5 * 2); //lives
-    printw("LIVES: %d", LIVES_AT_START);
+    printw("LIVES: %d", remaining_lives);
     move(ROWS - 2, COLUMNS / 2 + COLUMNS / 5 * 2 - 8); //score
     printw("SCORE: %d", score);
 
@@ -881,6 +892,8 @@ void load_saved_game() {
 
     fscanf(open_fd, "%s %d", temp, &score);
 
+    fscanf(open_fd, "%s %d", temp, &remaining_lives);
+
     fclose(open_fd);
 
     return;
@@ -944,6 +957,9 @@ void save_game() {
     strcat(buf, "\nSCORE: ");
     sprintf(number, "%d", score);
     strcat(buf, number);
+    strcat(buf, "\nLIVES: ");
+    sprintf(number, "%d", remaining_lives);
+    strcat(buf, number);
     strcat(buf, "\n");
 
     printf("%s", buf);
@@ -960,7 +976,7 @@ void save_game() {
 void save_file_screen()
 {
     FILE * save_file;
-    int level, score;
+    int level_saved, score_saved, lives_saved;
     char temp[10];
 
     struct stat stat_buf;
@@ -1032,17 +1048,15 @@ void save_file_screen()
     {
         save_file = fopen("../saves/save1", "r");
 
-        fscanf(save_file, "%s %d", temp, &level);
-        fscanf(save_file, "%s %d", temp, &score);
+        fscanf(save_file, "%s %d", temp, &level_saved);
+        fscanf(save_file, "%s %d", temp, &score_saved);
+        fscanf(save_file, "%s %d", temp, &lives_saved);
 
-        move(6, 10);
+        move(7, 10);
         printw("Save 1");
 
-        move(8, 10);
-        printw("LEVEL: %d", level);
-
         move(9, 10);
-        printw("SCORE: %d", score);
+        printw("LEVEL: %3d     SCORE: %8d     LIVES: %3d", level_saved, score_saved, lives_saved);
 
     }
     else
@@ -1055,17 +1069,15 @@ void save_file_screen()
     {
         save_file = fopen("../saves/save2", "r");
 
-        fscanf(save_file, "%s %d", temp, &level);
-        fscanf(save_file, "%s %d", temp, &score);
+        fscanf(save_file, "%s %d", temp, &level_saved);
+        fscanf(save_file, "%s %d", temp, &score_saved);
+        fscanf(save_file, "%s %d", temp, &lives_saved);
 
-        move(12, 10);
+        move(13, 10);
         printw("Save 2");
 
-        move(14, 10);
-        printw("LEVEL: %d", level);
-
         move(15, 10);
-        printw("SCORE: %d", score);
+        printw("LEVEL: %3d     SCORE: %8d     LIVES: %3d", level_saved, score_saved, lives_saved);
 
     }
     else
@@ -1078,17 +1090,15 @@ void save_file_screen()
     {
         save_file = fopen("../saves/save3", "r");
 
-        fscanf(save_file, "%s %d", temp, &level);
-        fscanf(save_file, "%s %d", temp, &score);
+        fscanf(save_file, "%s %d", temp, &level_saved);
+        fscanf(save_file, "%s %d", temp, &score_saved);
+        fscanf(save_file, "%s %d", temp, &lives_saved);
 
-        move(18, 10);
+        move(19, 10);
         printw("Save 3");
 
-        move(20, 10);
-        printw("LEVEL: %d", level);
-
         move(21, 10);
-        printw("SCORE: %d", score);
+        printw("LEVEL: %3d     SCORE: %8d     LIVES: %3d", level_saved, score_saved, lives_saved);
 
     }
     else
@@ -1102,6 +1112,65 @@ void save_file_screen()
     return;
 }
 
+void How_to_play_screen()
+{
+    clear();
+
+    //draw ui box
+    for (int i = 0; i <= COLUMNS; i++) {
+        move(1, i); //upper cover
+        addch('=');
+        move(ROWS - 1, i); //lower cover
+        addch('=');
+    }
+    for (int i = 2; i <= ROWS - 2; i++) {
+        move(i, 0); //left cover
+        addch('|');
+        move(i, COLUMNS); //right cover
+        addch('|');
+
+    }
+
+
+    //draw MENU
+    move(6, COLUMNS / 2 - 5);
+    printw("HOW TO PLAY");
+
+    //draw input Section
+    for (int i = 0; i < COLUMNS - 5; i++) {
+        move(ROWS - 4, i + 3); //lower cover
+        addch('_');
+        move(3, i + 3); //upper cover
+        addch('_');
+    }
+
+    for (int i = 0; i < ROWS - 7; i++) {
+
+        move(i + 4, 3); //left cover
+        addch('|');
+        move(i + 4, COLUMNS - 3); //right cover
+        addch('|');
+    }
+
+    //draw Selects
+
+    move(11, COLUMNS / 4);
+    printw("Type words before they disappear.");
+
+    move(13, COLUMNS / 4);
+    printw("Mint words are faster than other word.");
+
+    move(15, COLUMNS / 4);
+    printw("Red words can destroy the game.");
+
+    move(17, COLUMNS / 4);
+    printw("Green words give life.");
+
+    refresh();
+
+
+    return;
+}
 //-------------------Test Functions----------------
 
 // Unit tests for delete_falling_word()

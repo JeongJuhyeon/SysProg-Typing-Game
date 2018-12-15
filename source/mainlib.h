@@ -20,12 +20,12 @@
 #define BASE_SPAWN_TIME 3
 #define BASE_DROP_TIME 2
 #define ERASER "                                "
-#define LEVEL_TIME 10
+#define LEVEL_TIME 30
 #define START_LEVEL_SIGNAL 666
 
 typedef enum { DEFAULT = -1, ENTER = 10, ESC = 27, BACKSPACE = 127 } USR_INPUT_ASCII;
-enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', EXIT = '3'};
-enum level_clear_menu_choice { CONTINUE = '1', SAVE_GAME = '2'};
+enum main_menu_choice { NEW_GAME = '1', LOAD_GAME = '2', HOW_TO_PLAY = '3', EXIT = '4'};
+enum level_clear_menu_choice { CONTINUE = '1', SAVE_GAME = '2', GO_TO_MAIN = '3'};
 typedef enum { NORMAL = 0, BOMB, DROPS_FAST, EXTRA_LIFE} word_effect;
 
 typedef struct falling_word {
@@ -98,6 +98,7 @@ void refresh_score_clear_input_box();
 void refresh_lives();
 void refresh_time(int seconds);
 void save_file_screen();
+void How_to_play_screen();
 
 // file related functions
 int load_words(char * file_name, char ** word_list, int list_size);
